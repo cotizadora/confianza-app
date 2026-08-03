@@ -162,7 +162,7 @@
 
     <footer>
       <div class="firma" id="firmaBox"></div>
-      <div class="foot-brand">Confianza Inmobiliaria &middot; Datos Assetplan</div>
+      <div class="foot-brand" id="footBrand">Confianza Inmobiliaria &middot; Datos Assetplan</div>
     </footer>
   </div>
 
@@ -390,6 +390,22 @@ function boot(){ showLoading();
       if(!DATA.length){ showError("El archivo no tiene propiedades con el formato esperado."); return; }
       fillComunas(); apply(); })
     .catch(e=>showError(e.message)); }
+
+/* Acceso oculto para actualizar datos (3 toques en el pie -> codigo -> GitHub).
+   NOTA: el codigo solo OCULTA el acceso; la seguridad real es tu login de GitHub. */
+const UPLOAD_URL = "https://github.com/cotizadora/confianza-app/upload/main/data";
+const ADMIN_CODE = "Raul77";
+let _taps = 0, _tt = null;
+$("#footBrand").addEventListener("click", () => {
+  _taps++; clearTimeout(_tt); _tt = setTimeout(() => { _taps = 0; }, 1600);
+  if (_taps >= 3) {
+    _taps = 0;
+    const c = prompt("Codigo de acceso:");
+    if (c === null) return;
+    if (c === ADMIN_CODE) window.open(UPLOAD_URL, "_blank", "noopener");
+    else toast("Codigo incorrecto");
+  }
+});
 
 applyCfg(); boot();
 </script>
