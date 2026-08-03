@@ -65,6 +65,8 @@
   .price .cur{font-size:12px;color:var(--accent);font-weight:700;margin-right:1px}
   .gc{font-size:11px;color:var(--muted);margin:3px 0 0;text-align:right;font-variant-numeric:tabular-nums}
   .dir{font-size:13px;color:var(--txt);margin:11px 0 12px}
+  .coment{font-size:12px;color:var(--muted);background:var(--field);border:1px solid var(--border);
+    border-radius:10px;padding:8px 10px;margin:0 0 12px;line-height:1.45}
   .badges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
   .b{font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;background:color-mix(in srgb,var(--muted) 16%,transparent);color:var(--muted)}
   .b.v{background:color-mix(in srgb,var(--verde) 17%,transparent);color:var(--verde)}
@@ -123,6 +125,7 @@
     </header>
 
     <div class="filters">
+      <div><div class="flabel">Buscar</div><input id="q" type="search" placeholder="Direccion, condominio, comentario, OP..."/></div>
       <div><div class="flabel">Comuna</div><select id="comuna"><option value="">Todas</option></select></div>
       <div class="row">
         <div><div class="flabel">Precio min.</div><input id="pmin" type="number" inputmode="numeric" placeholder="0"/></div>
@@ -203,7 +206,7 @@ const DEFAULT_PHONE = "56975459683";
 const CFG_KEY = "confianza_cfg_v1";
 const cfg = Object.assign({theme:"dark",accent:"dorado",nombre:"",cargo:"",tel:DEFAULT_PHONE},
   JSON.parse(localStorage.getItem(CFG_KEY) || "{}"));
-const st = {comuna:"",pmin:"",pmax:"",dorm:new Set(),dias:"",visitable:"",orden:"ranking"};
+const st = {q:"",comuna:"",pmin:"",pmax:"",dorm:new Set(),dias:"",visitable:"",orden:"ranking"};
 let DATA = [], COMUNAS = [];
 const $ = s => document.querySelector(s);
 
@@ -251,7 +254,7 @@ function parseAssetplan(text){
       m2_terraza:toFloat(get("m2 Terraza")), max_inicio_dias:toInt(get("Max inicio cttos (Días)")),
       acepta_mascotas:toBool(get("Acepta Mascotas?")), arrienda_al_toque:toBool(get("Arrienda al toque")),
       visitable:toBool(get("Visitable")),
-      estado:get("Estado"), link_listing:get("Link Listing"),
+      estado:get("Estado"), link_listing:get("Link Listing"), comentario:get("Comentario"),
     });
   }
   const comunas=[...new Set(props.map(p=>p.comuna).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es"));
@@ -261,6 +264,7 @@ function parseAssetplan(text){
 /* ---------- UI ---------- */
 const clp = v => (!v||v===0) ? "Consultar" : '<span class="cur">$</span>'+Math.round(v).toLocaleString("es-CL");
 const clpTxt = v => (!v||v===0) ? "Consultar" : "$"+Math.round(v).toLocaleString("es-CL");
+const esc = s => (""+(s||"")).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function applyCfg(){ document.documentElement.setAttribute("data-theme",cfg.theme);
   document.documentElement.setAttribute("data-accent",cfg.accent); renderFirma(); }
 function renderFirma(){ const tel=(cfg.tel||DEFAULT_PHONE);
@@ -275,7 +279,9 @@ function score(p){let s=0; if(p.arrienda_al_toque)s+=100;
 function dormMatch(p){ if(st.dorm.size===0)return true;
   for(const d of st.dorm){if(d==="3+"){if(p.dormitorios>=3)return true;}else if(p.dormitorios==+d)return true;} return false;}
 function apply(){
+  const q=st.q.trim().toLowerCase();
   let r=DATA.filter(p=>{
+    if(q){const hay=((p.direccion||"")+" "+(p.comuna||"")+" "+(p.condominio||"")+" "+(p.tipologia||"")+" "+(p.op||"")+" "+(p.comentario||"")).toLowerCase();if(!hay.includes(q))return false;}
     if(st.comuna&&p.comuna!==st.comuna)return false;
     if(st.pmin&&(p.arriendo_total||0)<+st.pmin)return false;
     if(st.pmax&&(p.arriendo_total||0)>+st.pmax)return false;
@@ -307,6 +313,7 @@ function render(rows){
       <div><p class="tipo">${p.tipologia||"Depto"}</p><p class="meta">${p.comuna} &middot; OP ${p.op}</p></div>
       <div><p class="price">${clp(p.arriendo_total)}</p>${p.gc_total?`<p class="gc">+ GC ${clpTxt(p.gc_total)}</p>`:""}</div>
       </div><p class="dir">${p.direccion||""}</p><div class="badges">${badges}</div>
+      ${p.comentario?`<p class="coment">&#128221; ${esc(p.comentario)}</p>`:""}
       <div class="acts">
         <button class="btn gen" onclick='openPost(${JSON.stringify(p.op)})'>Generar post</button>
         <button class="btn copy" onclick='quickCopy(${JSON.stringify(p.op)})'>&#128203; Copiar</button>${ver}
@@ -339,6 +346,7 @@ $("#mCopy").onclick=()=>{navigator.clipboard.writeText($("#mText").value);toast(
 $("#mClose").onclick=()=>$("#mScrim").classList.remove("on");
 $("#mScrim").onclick=e=>{if(e.target.id==="mScrim")$("#mScrim").classList.remove("on");};
 
+$("#q").oninput=e=>{st.q=e.target.value;apply();};
 $("#comuna").onchange=e=>{st.comuna=e.target.value;apply();};
 $("#pmin").oninput=e=>{st.pmin=e.target.value;apply();};
 $("#pmax").oninput=e=>{st.pmax=e.target.value;apply();};
@@ -351,8 +359,8 @@ document.querySelectorAll("#dias .chip").forEach(b=>b.onclick=()=>{const x=b.dat
 document.querySelectorAll("#visit .chip").forEach(b=>b.onclick=()=>{const v=b.dataset.v;
   document.querySelectorAll("#visit .chip").forEach(o=>{if(o!==b)o.classList.remove("on");});
   if(st.visitable===v){st.visitable="";b.classList.remove("on");}else{st.visitable=v;b.classList.add("on");}apply();});
-$("#reset").onclick=()=>{st.comuna=st.pmin=st.pmax=st.dias=st.visitable="";st.dorm.clear();st.orden="ranking";
-  $("#comuna").value="";$("#pmin").value="";$("#pmax").value="";$("#orden").value="ranking";
+$("#reset").onclick=()=>{st.q=st.comuna=st.pmin=st.pmax=st.dias=st.visitable="";st.dorm.clear();st.orden="ranking";
+  $("#q").value="";$("#comuna").value="";$("#pmin").value="";$("#pmax").value="";$("#orden").value="ranking";
   document.querySelectorAll(".chip.on").forEach(c=>c.classList.remove("on"));apply();};
 
 function openSet(){ document.querySelectorAll("#segTheme button").forEach(b=>b.classList.toggle("on",b.dataset.t===cfg.theme));
