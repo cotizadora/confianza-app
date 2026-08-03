@@ -140,6 +140,11 @@
           <button class="chip" data-x="14">14 dias</button>
           <button class="chip" data-x="30">30 dias</button>
         </div></div>
+      <div><div class="flabel">Visitable</div>
+        <div class="chips" id="visit">
+          <button class="chip" data-v="si">Si</button>
+          <button class="chip" data-v="no">No</button>
+        </div></div>
       <div><div class="flabel">Ordenar por</div>
         <select id="orden">
           <option value="ranking">Recomendado</option>
@@ -198,7 +203,7 @@ const DEFAULT_PHONE = "56975459683";
 const CFG_KEY = "confianza_cfg_v1";
 const cfg = Object.assign({theme:"dark",accent:"dorado",nombre:"",cargo:"",tel:DEFAULT_PHONE},
   JSON.parse(localStorage.getItem(CFG_KEY) || "{}"));
-const st = {comuna:"",pmin:"",pmax:"",dorm:new Set(),dias:"",orden:"ranking"};
+const st = {comuna:"",pmin:"",pmax:"",dorm:new Set(),dias:"",visitable:"",orden:"ranking"};
 let DATA = [], COMUNAS = [];
 const $ = s => document.querySelector(s);
 
@@ -245,6 +250,7 @@ function parseAssetplan(text){
       descuento_pct:toFloat(get("% Descuento")), m2_depto:toFloat(get("m2 Depto")),
       m2_terraza:toFloat(get("m2 Terraza")), max_inicio_dias:toInt(get("Max inicio cttos (Días)")),
       acepta_mascotas:toBool(get("Acepta Mascotas?")), arrienda_al_toque:toBool(get("Arrienda al toque")),
+      visitable:toBool(get("Visitable")),
       estado:get("Estado"), link_listing:get("Link Listing"),
     });
   }
@@ -275,6 +281,8 @@ function apply(){
     if(st.pmax&&(p.arriendo_total||0)>+st.pmax)return false;
     if(!dormMatch(p))return false;
     if(st.dias&&!(p.max_inicio_dias!=null&&p.max_inicio_dias<=+st.dias))return false;
+    if(st.visitable==="si"&&!p.visitable)return false;
+    if(st.visitable==="no"&&p.visitable)return false;
     return true;});
   const s={ranking:(a,b)=>score(b)-score(a),precio:(a,b)=>(a.arriendo_total||0)-(b.arriendo_total||0),
     metros:(a,b)=>(b.m2_depto||0)-(a.m2_depto||0),
@@ -290,6 +298,7 @@ function render(rows){
     const badges=[p.dormitorios?`<span class="b">${p.dormitorios} dorm</span>`:"",
       p.banos?`<span class="b">${p.banos} ba&ntilde;o</span>`:"",
       p.m2_depto?`<span class="b">${(+p.m2_depto).toLocaleString("es-CL")} m&sup2;</span>`:"",
+      p.visitable?`<span class="b">Visitable</span>`:"",
       p.acepta_mascotas?`<span class="b d">&#128062; Mascotas</span>`:"",
       disp?`<span class="b v">Disponible</span>`:"",
       p.arrienda_al_toque?`<span class="b d">Al toque</span>`:""].join("");
@@ -339,7 +348,10 @@ document.querySelectorAll("#dorm .chip").forEach(b=>b.onclick=()=>{const d=b.dat
 document.querySelectorAll("#dias .chip").forEach(b=>b.onclick=()=>{const x=b.dataset.x;
   document.querySelectorAll("#dias .chip").forEach(o=>{if(o!==b)o.classList.remove("on");});
   if(st.dias===x){st.dias="";b.classList.remove("on");}else{st.dias=x;b.classList.add("on");}apply();});
-$("#reset").onclick=()=>{st.comuna=st.pmin=st.pmax=st.dias="";st.dorm.clear();st.orden="ranking";
+document.querySelectorAll("#visit .chip").forEach(b=>b.onclick=()=>{const v=b.dataset.v;
+  document.querySelectorAll("#visit .chip").forEach(o=>{if(o!==b)o.classList.remove("on");});
+  if(st.visitable===v){st.visitable="";b.classList.remove("on");}else{st.visitable=v;b.classList.add("on");}apply();});
+$("#reset").onclick=()=>{st.comuna=st.pmin=st.pmax=st.dias=st.visitable="";st.dorm.clear();st.orden="ranking";
   $("#comuna").value="";$("#pmin").value="";$("#pmax").value="";$("#orden").value="ranking";
   document.querySelectorAll(".chip.on").forEach(c=>c.classList.remove("on"));apply();};
 
