@@ -107,6 +107,12 @@
   .seg button.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
   .field-lbl{font-size:12px;color:var(--muted);margin:12px 0 5px;font-weight:600}
   .save{width:100%;margin-top:18px;padding:14px;border:none;border-radius:13px;background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:15px;cursor:pointer}
+  .abtn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px;border-radius:13px;
+    font-weight:800;font-size:15px;text-decoration:none;margin-bottom:11px;border:none;cursor:pointer}
+  .abtn.dl{background:var(--azul);color:#fff}
+  .abtn.up{background:var(--accent);color:var(--accent-ink)}
+  .anote{font-size:12px;color:var(--muted);line-height:1.5}.anote b{color:var(--title)}
+  .astep{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:4px 0 8px}
   .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--title);color:var(--page);
     padding:11px 20px;border-radius:999px;font-weight:700;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:80;box-shadow:0 10px 30px rgba(0,0,0,.4)}
   .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -195,6 +201,18 @@
         <div class="field-lbl">WhatsApp para los posts</div><input id="fTel" inputmode="numeric" placeholder="56927690949"/>
       </div>
       <button class="save" id="sSave">Guardar</button>
+    </div>
+  </div>
+
+  <div class="scrim" id="aScrim">
+    <div class="sheet">
+      <div class="shead"><h3>Actualizar inventario</h3><button class="close" id="aClose">&#10005;</button></div>
+      <div class="astep">Paso 1 &mdash; Descargar</div>
+      <a class="abtn dl" href="https://app.assetplan.cl/app/vacios/corredores_view#" target="_blank" rel="noopener">&#11015; Descargar CSV de Assetplan</a>
+      <div class="astep">Paso 2 &mdash; Subir</div>
+      <a class="abtn up" href="https://github.com/cotizadora/confianza-app/upload/main/data" target="_blank" rel="noopener">&#11014; Subir CSV a GitHub</a>
+      <p class="anote">Se abren en pesta&ntilde;a nueva &mdash; usa <b>pantalla dividida</b> para verlos junto a la app.
+        El archivo debe llamarse <b>export.csv</b> y debes estar en GitHub como <b>cotizadora</b>.</p>
     </div>
   </div>
 
@@ -397,7 +415,6 @@ function boot(){ showLoading(); let lm=null;
 
 /* Acceso oculto para actualizar datos (3 toques en el pie -> codigo -> GitHub).
    NOTA: el codigo solo OCULTA el acceso; la seguridad real es tu login de GitHub. */
-const UPLOAD_URL = "https://github.com/cotizadora/confianza-app/upload/main/data";
 const ADMIN_CODE = "Raul77";
 let _taps = 0, _tt = null;
 $("#footBrand").addEventListener("click", () => {
@@ -406,10 +423,12 @@ $("#footBrand").addEventListener("click", () => {
     _taps = 0;
     const c = prompt("Codigo de acceso:");
     if (c === null) return;
-    if (c === ADMIN_CODE) window.open(UPLOAD_URL, "_blank", "noopener");
+    if (c === ADMIN_CODE) $("#aScrim").classList.add("on");
     else toast("Codigo incorrecto");
   }
 });
+$("#aClose").onclick = () => $("#aScrim").classList.remove("on");
+$("#aScrim").onclick = e => { if (e.target.id === "aScrim") $("#aScrim").classList.remove("on"); };
 
 applyCfg(); boot();
 </script>
