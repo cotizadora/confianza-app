@@ -360,6 +360,12 @@ function score(p){let s=0; if(p.arrienda_al_toque)s+=100;
 function dormMatch(p){ if(st.dorm.size===0)return true;
   for(const d of st.dorm){if(d==="3+"){if(p.dormitorios>=3)return true;}else if(p.dormitorios==+d)return true;} return false;}
 function apply(){
+  syncBadge();
+  if(activeCount()===0){
+    $("#count").textContent="Usa los filtros para comenzar";
+    $("#list").innerHTML='<div class="state">🔎 Elige un filtro (comuna, dormitorios, disponibilidad…) o busca una dirección para ver las propiedades disponibles.</div>';
+    return;
+  }
   const q=st.q.trim().toLowerCase();
   let r=DATA.filter(p=>{
     if(q){const hay=((p.direccion||"")+" "+(p.comuna||"")+" "+(p.condominio||"")+" "+(p.tipologia||"")+" "+(p.op||"")+" "+(p.comentario||"")).toLowerCase();if(!hay.includes(q))return false;}
@@ -382,7 +388,7 @@ function apply(){
     precio_desc:(a,b)=>(b.arriendo_total||0)-(a.arriendo_total||0),
     metros:(a,b)=>(b.m2_depto||0)-(a.m2_depto||0),
     disponibilidad:(a,b)=>(a.max_inicio_dias??9999)-(b.max_inicio_dias??9999)}[st.orden];
-  r.sort(s); render(r); syncBadge();
+  r.sort(s); render(r);
 }
 function render(rows){
   $("#count").innerHTML="<b>"+rows.length+"</b> propiedades";
