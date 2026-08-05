@@ -112,7 +112,10 @@
   .b.v{background:color-mix(in srgb,var(--verde) 17%,transparent);color:var(--verde)}
   .b.d{background:color-mix(in srgb,var(--accent) 17%,transparent);color:var(--accent)}
   .b.warn{background:color-mix(in srgb,var(--rojo) 15%,transparent);color:var(--rojo)}
-  .acts{display:flex;gap:8px;align-items:stretch}
+  .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .acts2{display:flex;gap:8px;margin-top:8px}
+  .btn.req{flex:1;background:var(--field);border:1px solid var(--border);color:var(--txt)}
+  @media (hover:hover){.btn.req:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--border));color:var(--title)}}
   .btn{border:none;border-radius:12px;padding:11px 14px;font-weight:700;font-size:13.5px;cursor:pointer;text-align:center;text-decoration:none;font-family:inherit;white-space:nowrap;
     transition:background-color .15s var(--ease-out),border-color .15s var(--ease-out),filter .15s var(--ease-out),transform .1s var(--ease-out)}
   .btn.gen{flex:0 0 auto;background:transparent;border:1px solid var(--accent);color:var(--accent)}
@@ -258,6 +261,12 @@
         <div class="field-lbl">Cargo / titulo (opcional)</div><input id="fCargo" placeholder="Ej: Ejecutivo de arriendos"/>
         <div class="field-lbl">WhatsApp para los posts</div><input id="fTel" inputmode="numeric" placeholder="56927690949"/>
         <div class="field-lbl">Frase / sello personal (opcional)</div><input id="fSello" placeholder="Ej: Tu asesor de confianza en arriendos"/>
+      </div>
+      <div class="set-group">
+        <div class="flabel">Soporte</div>
+        <a class="abtn" target="_blank" rel="noopener" style="background:#25D366;color:#052e16;width:100%"
+           href="https://wa.me/56927690949?text=Hola%2C%20reporto%20un%20error%20o%20sugerencia%20sobre%20la%20app%3A%20">&#128172; Sugerencias o reportar un error</a>
+        <p class="anote" style="margin-top:8px">App de <b>Confianza Inmobiliaria</b> &middot; creada por Eduardo Pérez</p>
       </div>
       <button class="save" id="sSave">Guardar</button>
     </div>
@@ -417,7 +426,10 @@ function render(rows){
       ${p.comentario?`<p class="coment">&#128221; ${esc(p.comentario)}</p>`:""}
       <div class="acts">
         <button class="btn gen" onclick='copyFB(${JSON.stringify(p.op)})'>Post Facebook</button>
-        <button class="btn copy" onclick='copyWA(${JSON.stringify(p.op)})'>Copiar WhatsApp</button>${ver}
+        <button class="btn copy" onclick='copyWA(${JSON.stringify(p.op)})'>Copiar WhatsApp</button>
+      </div>
+      <div class="acts2">
+        <button class="btn req" onclick='copyReq(${JSON.stringify(p.op)})'>Requisitos</button>${ver}
       </div></div>`;}).join("");
 }
 function postText(p){
@@ -524,6 +536,43 @@ function clip(text){
 window.copyFB=function(op){const p=DATA.find(x=>x.op===op);if(!p)return;clip(fbText(p)).then(()=>toast("Copiado para Facebook ✓"),()=>toast("No se pudo copiar"));};
 window.copyWA=function(op){const p=DATA.find(x=>x.op===op);if(!p)return;clip(waText(p)).then(()=>toast("Copiado para WhatsApp ✓"),()=>toast("No se pudo copiar"));};
 window.copyOP=function(op){clip(""+op).then(()=>toast("OP "+op+" copiada ✓"),()=>toast("No se pudo copiar"));};
+/* Requisitos para arrendar, contextualizados por propiedad (renta según arriendo). */
+function reqText(p){
+  const r=p.arriendo_total||0;
+  const L=[];
+  L.push("📋 *Requisitos para arrendar*");
+  L.push(p.direccion+", "+p.comuna+(p.op?" (OP "+p.op+")":""));
+  L.push("Arriendo: "+clpTxt(p.arriendo_total)+(p.gc_total?"  |  Gastos comunes: "+clpTxt(p.gc_total):""));
+  L.push("");
+  L.push("*Requisitos generales:*");
+  L.push("• Cédula de identidad chilena vigente (extranjeros: cédula vigente + visa).");
+  L.push("• Sin deudas morosas en el reporte financiero.");
+  if(r){
+    L.push("• Renta líquida mínima de "+clpTxt(Math.round(r*2.5))+" (2,5 veces el arriendo).");
+    L.push("   Si no la alcanzas, puedes complementar con hasta 2 avales, sumando una renta líquida de "+clpTxt(Math.round(r*3))+" (3 veces el arriendo).");
+  }
+  L.push("");
+  L.push("*Trabajador dependiente:*");
+  L.push("• Tres últimas liquidaciones de sueldo.");
+  L.push("• Certificado de cotizaciones de AFP.");
+  L.push("");
+  L.push("*Trabajador independiente:*");
+  L.push("• Carpeta tributaria o Formulario 29 de los últimos 6 meses.");
+  L.push("• Informe mensual de boletas de honorarios de los últimos 6 meses.");
+  L.push("");
+  const cond=["Sin comisión de corretaje."];
+  cond.unshift(p.sin_garantia?"Se arrienda sin garantía.":"Garantía equivalente a 1 mes, pagable en 3 cuotas.");
+  if(!p.requiere_aval)cond.push("Opción sin aval disponible.");
+  L.push("*Condiciones de este departamento:*");
+  cond.forEach(c=>L.push("• "+c));
+  L.push("");
+  L.push("¿Te ayudo a revisar si cumples los requisitos? Escríbeme 😊");
+  L.push("👉 wa.me/"+(cfg.tel||DEFAULT_PHONE));
+  L.push("— "+(cfg.nombre||"Confianza Inmobiliaria")+(cfg.cargo?", "+cfg.cargo:""));
+  if(cfg.sello)L.push(cfg.sello);
+  return L.join("\n");
+}
+window.copyReq=function(op){const p=DATA.find(x=>x.op===op);if(!p)return;clip(reqText(p)).then(()=>toast("Requisitos copiados ✓"),()=>toast("No se pudo copiar"));};
 function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("on");
   clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("on"),1600);}
 window.quickCopy=function(op){const p=DATA.find(x=>x.op===op);if(!p)return;
