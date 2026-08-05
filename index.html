@@ -239,6 +239,11 @@
   <div class="scrim" id="sScrim">
     <div class="sheet">
       <div class="shead"><h3>Personalizar</h3><button class="close" id="sClose">&#10005;</button></div>
+      <div class="set-group" id="installGroup" style="display:none">
+        <div class="flabel">Aplicación</div>
+        <button class="abtn up" id="installBtn" style="width:100%">&#128241; Instalar en el celular</button>
+        <p class="anote" id="installHint" style="display:none;margin-top:8px"></p>
+      </div>
       <div class="set-group"><div class="flabel">Tema</div>
         <div class="seg" id="segTheme"><button data-t="dark">Oscuro</button><button data-t="light">Claro</button></div></div>
       <div class="set-group"><div class="flabel">Color de acento</div>
@@ -545,7 +550,8 @@ $("#fToggle").onclick=()=>{const open=$("#fwrap").classList.toggle("open");$("#f
 
 function openSet(){ document.querySelectorAll("#segTheme button").forEach(b=>b.classList.toggle("on",b.dataset.t===cfg.theme));
   document.querySelectorAll("#swAccent .sw").forEach(s=>s.classList.toggle("on",s.dataset.a===cfg.accent));
-  $("#fNombre").value=cfg.nombre;$("#fCargo").value=cfg.cargo;$("#fTel").value=cfg.tel||"";$("#fSello").value=cfg.sello||"";$("#sScrim").classList.add("on");}
+  $("#fNombre").value=cfg.nombre;$("#fCargo").value=cfg.cargo;$("#fTel").value=cfg.tel||"";$("#fSello").value=cfg.sello||"";
+  updateInstallUI();$("#sScrim").classList.add("on");}
 $("#openSet").onclick=openSet;
 $("#sClose").onclick=()=>$("#sScrim").classList.remove("on");
 $("#sScrim").onclick=e=>{if(e.target.id==="sScrim")$("#sScrim").classList.remove("on");};
@@ -594,6 +600,25 @@ $("#aClose").onclick = () => $("#aScrim").classList.remove("on");
 $("#aScrim").onclick = e => { if (e.target.id === "aScrim") $("#aScrim").classList.remove("on"); };
 
 if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));}
+
+/* Instalar como app: botón en la tuerca. Se oculta si ya está instalada
+   (se ejecuta en pantalla completa). En iPhone muestra la instrucción manual. */
+let deferredPrompt=null;
+function isStandalone(){return window.matchMedia("(display-mode: standalone)").matches || navigator.standalone===true;}
+function updateInstallUI(){
+  const g=$("#installGroup"); if(!g)return;
+  if(isStandalone()){g.style.display="none";return;}   // ya instalada
+  const iOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(deferredPrompt){g.style.display="";$("#installBtn").style.display="";$("#installHint").style.display="none";}
+  else if(iOS){g.style.display="";$("#installBtn").style.display="none";$("#installHint").style.display="";
+    $("#installHint").innerHTML="En iPhone: toca <b>Compartir</b> y luego <b>Agregar a inicio</b>.";}
+  else{g.style.display="none";}
+}
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;updateInstallUI();});
+window.addEventListener("appinstalled",()=>{deferredPrompt=null;updateInstallUI();toast("¡App instalada! 🎉");});
+$("#installBtn").onclick=async()=>{ if(!deferredPrompt)return; deferredPrompt.prompt();
+  try{await deferredPrompt.userChoice;}catch(e){} deferredPrompt=null; updateInstallUI(); };
+
 applyCfg(); boot();
 </script>
 </body>
