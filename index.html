@@ -414,33 +414,76 @@ function postText(p){
   if(cfg.cargo)L.push(cfg.cargo); L.push(`📱 wa.me/${tel}`);
   return L.join("\n");
 }
-/* Texto SOBRIO para grupos de Facebook (sin emoticones) */
+/* Helpers de texto: número con formato chileno y orientación en palabras. */
+function numCL(v){return Number(v).toLocaleString("es-CL");}
+function orient(c){const m={N:"Norte",S:"Sur",O:"Oriente",P:"Poniente"};
+  return (""+c).toUpperCase().split("").map(ch=>m[ch]||ch).join(" ");}
+function distrib(p){
+  const d=p.dormitorios?(p.dormitorios+" dormitorio"+(p.dormitorios>1?"s":"")):null;
+  const b=p.banos?(p.banos+" baño"+(p.banos>1?"s":"")):null;
+  return [d,b].filter(Boolean).join(" y ");
+}
+
+/* Formato de teléfono chileno legible: 56927690949 -> +56 9 2769 0949 */
+function telFmt(t){t=(""+t).replace(/\D/g,"");
+  if(t.length===11&&t.startsWith("569"))return "+56 9 "+t.slice(3,7)+" "+t.slice(7);
+  return "+"+t;}
+function hashComuna(c){return "#"+(""+c).normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s+/g,"");}
+
+/* Texto para publicación en grupos de Facebook: formato atractivo (modelo del
+   cliente) con emoticones sobrios, sección de beneficios y hashtags. */
 function fbText(p){
-  const tel=cfg.tel||DEFAULT_PHONE;
-  const L=[(p.tipologia?p.tipologia:"Departamento")+" en arriendo — "+p.comuna,""];
-  L.push("Ubicación: "+p.direccion+", "+p.comuna);
-  if(p.condominio)L.push("Condominio: "+p.condominio);
-  const dd=[]; if(p.dormitorios)dd.push(p.dormitorios+" dormitorio"+(p.dormitorios>1?"s":"")); if(p.banos)dd.push(p.banos+" baño"+(p.banos>1?"s":""));
-  if(dd.length)L.push("Distribución: "+dd.join(", "));
-  if(p.m2_depto)L.push("Superficie: "+(+p.m2_depto)+" m²"+(p.m2_terraza?" + "+(+p.m2_terraza)+" m² de terraza":""));
-  L.push("Valor arriendo: "+clpTxt(p.arriendo_total));
-  if(p.gc_total)L.push("Gastos comunes: "+clpTxt(p.gc_total));
-  if(p.acepta_mascotas)L.push("Acepta mascotas.");
+  const dd=distrib(p);
+  const ben=["Sin comisión de corretaje"];
+  if(p.descuento_pct>0)ben.push("Descuento del "+(+p.descuento_pct)+"% en el primer mes");
+  if(p.sin_garantia)ben.push("Se arrienda sin garantía"); else ben.push("Garantía en 3 cuotas");
+  if(!p.requiere_aval)ben.push("Opción sin aval");
+  if(p.acepta_mascotas)ben.push("Acepta mascotas");
+  if(p.estac_has)ben.push("Incluye estacionamiento");
+  if(p.bod_has)ben.push("Incluye bodega");
+
+  const L=[];
+  L.push("🏡 ¡Tu próximo hogar te está esperando!");
   L.push("");
-  L.push("Contacto: "+(cfg.nombre||"Confianza Inmobiliaria")+(cfg.cargo?", "+cfg.cargo:"")+". WhatsApp +"+tel+".");
+  L.push("Departamento en arriendo en "+p.comuna+(dd?" — "+dd:"")+".");
+  L.push("📍 "+p.direccion+(p.condominio?" · "+p.condominio:""));
+  if(p.m2_depto)L.push("📐 "+numCL(p.m2_depto)+" m²"+(p.m2_terraza?" + "+numCL(p.m2_terraza)+" m² de terraza":""));
+  L.push("💰 Arriendo: "+clpTxt(p.arriendo_total)+(p.gc_total?"  |  Gastos comunes: "+clpTxt(p.gc_total):""));
+  if(p.orientacion)L.push("🧭 Orientación: "+orient(p.orientacion));
+  L.push("");
+  L.push("Beneficios:");
+  ben.forEach(b=>L.push("✅ "+b));
+  L.push("");
+  L.push("📲 Escríbenos por WhatsApp al "+telFmt(cfg.tel||DEFAULT_PHONE));
+  L.push("🌐 Más propiedades en: www.confianzainmobiliaria.cl");
+  L.push("");
+  L.push(["#Arriendo","#Departamentos",hashComuna(p.comuna),"#ConfianzaInmobiliaria",
+          "#ArriendosChile","#DepartamentoEnArriendo","#Vivienda","#Santiago"].join(" "));
   return L.join("\n");
 }
-/* Texto DIRECTO para WhatsApp (algunos emojis, sin exagerar) */
+
+/* Texto para WhatsApp: completo y pensado para un cliente que pide información,
+   con palabras completas y algunos emojis (sin exagerar). */
 function waText(p){
-  const tel=cfg.tel||DEFAULT_PHONE;
-  const L=["🏠 *Arriendo en "+p.comuna+"*",""];
-  if(p.tipologia)L.push(p.tipologia+" · "+p.dormitorios+"D/"+p.banos+"B"+(p.m2_depto?" · "+(+p.m2_depto)+" m²":""));
-  L.push("📍 "+p.direccion);
-  L.push("💰 "+clpTxt(p.arriendo_total)+(p.gc_total?" + GC "+clpTxt(p.gc_total):""));
+  const tel=cfg.tel||DEFAULT_PHONE, dd=distrib(p);
+  const L=["🏠 *Departamento en arriendo en "+p.comuna+"*",""];
+  let intro="Tengo disponible un lindo departamento"+(dd?" de "+dd:"")+" ubicado en "+p.direccion;
+  if(p.condominio)intro+=", en el condominio "+p.condominio;
+  intro+=".";
+  L.push(intro,"");
+  L.push("Estos son los detalles:");
+  L.push("📍 Ubicación: "+p.direccion+", "+p.comuna);
+  if(p.m2_depto)L.push("📐 Superficie: "+numCL(p.m2_depto)+" m²"+(p.m2_terraza?" más "+numCL(p.m2_terraza)+" m² de terraza":""));
+  L.push("💰 Valor del arriendo: "+clpTxt(p.arriendo_total));
+  if(p.gc_total)L.push("🧾 Gastos comunes: "+clpTxt(p.gc_total));
+  if(p.estac_has)L.push("🚗 Incluye estacionamiento");
+  if(p.bod_has)L.push("📦 Incluye bodega");
   if(p.acepta_mascotas)L.push("🐾 Acepta mascotas");
+  if(p.orientacion)L.push("🧭 Orientación: "+orient(p.orientacion));
   L.push("");
-  L.push("¿Te interesa? Escríbeme 👉 wa.me/"+tel);
-  if(cfg.nombre)L.push("— "+cfg.nombre);
+  L.push("¿Te gustaría más información o coordinar una visita? Escríbeme y con gusto te ayudo 😊");
+  L.push("👉 wa.me/"+tel);
+  L.push("— "+(cfg.nombre||"Confianza Inmobiliaria")+(cfg.cargo?", "+cfg.cargo:""));
   return L.join("\n");
 }
 /* Copia robusta: usa Clipboard API en contexto seguro (HTTPS/localhost),
