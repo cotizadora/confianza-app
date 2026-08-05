@@ -243,6 +243,7 @@
         <div class="field-lbl">Nombre</div><input id="fNombre" placeholder="Ej: Eduardo Perez"/>
         <div class="field-lbl">Cargo / titulo (opcional)</div><input id="fCargo" placeholder="Ej: Ejecutivo de arriendos"/>
         <div class="field-lbl">WhatsApp para los posts</div><input id="fTel" inputmode="numeric" placeholder="56927690949"/>
+        <div class="field-lbl">Frase / sello personal (opcional)</div><input id="fSello" placeholder="Ej: Tu asesor de confianza en arriendos"/>
       </div>
       <button class="save" id="sSave">Guardar</button>
     </div>
@@ -266,7 +267,7 @@
 const CSV_URL = "data/export.csv";
 const DEFAULT_PHONE = "56927690949";
 const CFG_KEY = "confianza_cfg_v1";
-const cfg = Object.assign({theme:"dark",accent:"dorado",nombre:"",cargo:"",tel:DEFAULT_PHONE},
+const cfg = Object.assign({theme:"dark",accent:"dorado",nombre:"",cargo:"",tel:DEFAULT_PHONE,sello:""},
   JSON.parse(localStorage.getItem(CFG_KEY) || "{}"));
 const st = {q:"",comuna:"",dorm:new Set(),dias:"",visitable:"",extras:new Set(),orden:"ranking"};
 let DATA = [], COMUNAS = [];
@@ -454,7 +455,9 @@ function fbText(p){
   L.push("Beneficios:");
   ben.forEach(b=>L.push("✅ "+b));
   L.push("");
-  L.push("📲 Escríbenos por WhatsApp al "+telFmt(cfg.tel||DEFAULT_PHONE));
+  const quien=cfg.nombre?(cfg.nombre+(cfg.cargo?" · "+cfg.cargo:"")):"";
+  L.push("📲 Escríbe"+(cfg.nombre?"me":"nos")+" por WhatsApp al "+telFmt(cfg.tel||DEFAULT_PHONE)+(quien?" — "+quien:""));
+  if(cfg.sello)L.push(cfg.sello);
   L.push("🌐 Más propiedades en: www.confianzainmobiliaria.cl");
   L.push("");
   L.push(["#Arriendo","#Departamentos",hashComuna(p.comuna),"#ConfianzaInmobiliaria",
@@ -484,6 +487,7 @@ function waText(p){
   L.push("¿Te gustaría más información o coordinar una visita? Escríbeme y con gusto te ayudo 😊");
   L.push("👉 wa.me/"+tel);
   L.push("— "+(cfg.nombre||"Confianza Inmobiliaria")+(cfg.cargo?", "+cfg.cargo:""));
+  if(cfg.sello)L.push(cfg.sello);
   return L.join("\n");
 }
 /* Copia robusta: usa Clipboard API en contexto seguro (HTTPS/localhost),
@@ -533,7 +537,7 @@ $("#fToggle").onclick=()=>{const open=$("#fwrap").classList.toggle("open");$("#f
 
 function openSet(){ document.querySelectorAll("#segTheme button").forEach(b=>b.classList.toggle("on",b.dataset.t===cfg.theme));
   document.querySelectorAll("#swAccent .sw").forEach(s=>s.classList.toggle("on",s.dataset.a===cfg.accent));
-  $("#fNombre").value=cfg.nombre;$("#fCargo").value=cfg.cargo;$("#fTel").value=cfg.tel||"";$("#sScrim").classList.add("on");}
+  $("#fNombre").value=cfg.nombre;$("#fCargo").value=cfg.cargo;$("#fTel").value=cfg.tel||"";$("#fSello").value=cfg.sello||"";$("#sScrim").classList.add("on");}
 $("#openSet").onclick=openSet;
 $("#sClose").onclick=()=>$("#sScrim").classList.remove("on");
 $("#sScrim").onclick=e=>{if(e.target.id==="sScrim")$("#sScrim").classList.remove("on");};
@@ -542,6 +546,7 @@ document.querySelectorAll("#segTheme button").forEach(b=>b.onclick=()=>{cfg.them
 document.querySelectorAll("#swAccent .sw").forEach(s=>s.onclick=()=>{cfg.accent=s.dataset.a;
   document.querySelectorAll("#swAccent .sw").forEach(o=>o.classList.remove("on"));s.classList.add("on");applyCfg();});
 $("#sSave").onclick=()=>{cfg.nombre=$("#fNombre").value.trim();cfg.cargo=$("#fCargo").value.trim();
+  cfg.sello=$("#fSello").value.trim();
   cfg.tel=($("#fTel").value.trim()||DEFAULT_PHONE).replace(/[^0-9]/g,"");
   localStorage.setItem(CFG_KEY,JSON.stringify(cfg));applyCfg();$("#sScrim").classList.remove("on");toast("Preferencias guardadas");};
 
