@@ -100,6 +100,7 @@
   .ctop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
   .tipo{font-size:19px;font-weight:800;color:var(--title);margin:0;letter-spacing:-.02em;line-height:1.12;text-wrap:balance}
   .meta{font-size:12px;color:var(--muted);margin:4px 0 0;letter-spacing:.01em}
+  .opcopy{color:var(--accent);cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px}
   .price{font-size:22px;font-weight:800;color:var(--title);margin:0;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
   .price .cur{font-size:12px;color:var(--accent);font-weight:700;margin-right:1px}
   .gc{font-size:11px;color:var(--muted);margin:3px 0 0;text-align:right;font-variant-numeric:tabular-nums}
@@ -410,7 +411,7 @@ function render(rows){
       p.arrienda_al_toque?`<span class="b d">Al toque</span>`:""].join("");
     const ver=p.link_listing?`<a class="btn ghost" target="_blank" href="${p.link_listing}">Ver</a>`:"";
     return `<div class="card"><div class="ctop">
-      <div><p class="tipo">${p.tipologia||"Depto"}</p><p class="meta">${p.comuna} &middot; OP ${p.op}${p.orientacion?" &middot; "+esc(p.orientacion):""}</p></div>
+      <div><p class="tipo">${p.tipologia||"Depto"}</p><p class="meta">${p.comuna} &middot; <span class="opcopy" onclick='copyOP(${JSON.stringify(p.op)})'>OP ${p.op}</span>${p.orientacion?" &middot; "+esc(p.orientacion):""}</p></div>
       <div><p class="price">${clp(p.arriendo_total)}</p>${p.gc_total?`<p class="gc">+ GC ${clpTxt(p.gc_total)}</p>`:""}</div>
       </div><p class="dir">${p.direccion||""}</p><div class="badges">${badges}</div>
       ${p.comentario?`<p class="coment">&#128221; ${esc(p.comentario)}</p>`:""}
@@ -522,6 +523,7 @@ function clip(text){
 }
 window.copyFB=function(op){const p=DATA.find(x=>x.op===op);if(!p)return;clip(fbText(p)).then(()=>toast("Copiado para Facebook ✓"),()=>toast("No se pudo copiar"));};
 window.copyWA=function(op){const p=DATA.find(x=>x.op===op);if(!p)return;clip(waText(p)).then(()=>toast("Copiado para WhatsApp ✓"),()=>toast("No se pudo copiar"));};
+window.copyOP=function(op){clip(""+op).then(()=>toast("OP "+op+" copiada ✓"),()=>toast("No se pudo copiar"));};
 function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("on");
   clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("on"),1600);}
 window.quickCopy=function(op){const p=DATA.find(x=>x.op===op);if(!p)return;
