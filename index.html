@@ -54,7 +54,7 @@
   /* Foco accesible (teclado) en todo elemento interactivo — nunca animado */
   :focus-visible{outline:2px solid var(--title);outline-offset:2px;border-radius:inherit}
   @media (prefers-reduced-motion: reduce){
-    *,*::before{animation-duration:.01ms!important;transition-duration:.01ms!important}
+    *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;animation-delay:0s!important;transition-duration:.01ms!important}
   }
   body{margin:0;background:var(--page);color:var(--txt);
     font-family:'Plus Jakarta Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-font-smoothing:antialiased;}
@@ -171,7 +171,44 @@
   .btn.copy:hover{filter:brightness(1.05)}
   /* microinteraccion: feedback de presion (funciona en touch, hallmark button-press) */
   .btn:active,.chip:active,.gear:active,.abtn:active{transform:translateY(1px)}
-  .state{padding:64px 24px;text-align:center;color:var(--muted)}
+  .state{padding:64px 24px;text-align:center;color:var(--muted);animation:fadeUp .45s var(--ease-out) backwards}
+  .b.amb{background:color-mix(in srgb,#f59e0b 17%,transparent);color:#f59e0b}
+
+  /* ===== Animaciones premium (se desactivan con "reducir movimiento") ===== */
+  @keyframes cardIn{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:none}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes pop{0%{transform:scale(.85);opacity:.4}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+  @keyframes ctaGlow{0%,100%{box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 14%,transparent)}50%{box-shadow:0 0 0 9px color-mix(in srgb,var(--accent) 6%,transparent)}}
+  @keyframes shine{from{transform:translateX(-120%) skewX(-18deg)}to{transform:translateX(260%) skewX(-18deg)}}
+  @keyframes shimmer{to{background-position:-200% 0}}
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  /* tarjetas: entran en cascada */
+  .card{animation:cardIn .5s var(--ease-out) backwards;animation-delay:calc(var(--i,0) * 45ms)}
+  /* brillo que cruza la tarjeta al pasar el mouse (PC) */
+  .card::after{content:"";position:absolute;top:0;bottom:0;left:0;width:40%;pointer-events:none;
+    background:linear-gradient(90deg,transparent,color-mix(in srgb,#fff 7%,transparent),transparent);transform:translateX(-120%) skewX(-18deg)}
+  @media (hover:hover){.card:hover::after{animation:shine .9s var(--ease-out)}
+    .btn.fb:hover,.btn.wa:hover{transform:translateY(-1px);box-shadow:0 8px 18px -8px rgba(0,0,0,.5)}}
+  /* contador de resultados y filtros marcados: pequeño "pop" */
+  .bar b{display:inline-block;animation:pop .4s var(--ease-out)}
+  .chip.on{animation:pop .28s var(--ease-out)}
+  .fbadge{display:inline-block;animation:pop .35s var(--ease-out)}
+  /* selector de comuna: invita a tocarlo hasta que se elige */
+  .fhero:not(.done) select{animation:ctaGlow 2.4s ease-in-out infinite}
+  /* filtros: aparecen uno tras otro al abrir el menú */
+  .fwrap.open .filters>*{animation:fadeUp .35s var(--ease-out) backwards}
+  .fwrap.open .filters>*:nth-child(2){animation-delay:.04s}.fwrap.open .filters>*:nth-child(3){animation-delay:.08s}
+  .fwrap.open .filters>*:nth-child(4){animation-delay:.12s}.fwrap.open .filters>*:nth-child(5){animation-delay:.16s}
+  /* logo y aviso superior */
+  .brand-logo{animation:fadeUp .6s var(--ease-out) backwards}
+  .banner{position:relative;overflow:hidden}
+  .banner.warn::after{content:"";position:absolute;top:0;bottom:0;left:0;width:30%;pointer-events:none;
+    background:linear-gradient(90deg,transparent,color-mix(in srgb,#fff 18%,transparent),transparent);animation:shine 3.2s ease-in-out infinite}
+  .sicon{display:block;font-size:30px;margin-bottom:10px;animation:floaty 2.4s ease-in-out infinite}
+  /* esqueleto de carga */
+  .skel{height:210px;border-radius:var(--radius);border:1px solid var(--border);
+    background:linear-gradient(90deg,var(--surface) 25%,color-mix(in srgb,var(--surface) 70%,var(--muted)) 50%,var(--surface) 75%);
+    background-size:200% 100%;animation:shimmer 1.3s linear infinite}
   .spin{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite;margin:0 auto 16px}
   @keyframes sp{to{transform:rotate(360deg)}}
   .retry{margin-top:14px;padding:9px 16px;border-radius:10px;border:1px solid var(--accent);background:transparent;color:var(--accent);font-weight:700;cursor:pointer}
@@ -560,8 +597,11 @@ function parseAssetplan(text){
       visitable:toBool(get("Visitable")),
       estac_has: !!estacV && estacV!=="0" && estacV!=="no",
       bod_has: !!bodV && bodV!=="0" && bodV!=="no",
-      sin_garantia:toBool(get("Sin Garantia")), requiere_aval:get("Requiere Aval(es)")==="1",
+       requiere_aval:get("Requiere Aval(es)")==="1",
       orientacion:get("Orientacion"),
+      garantias:toInt(get("Cant. Garantías (Meses)")), sin_garantia:toInt(get("Cant. Garantías (Meses)"))===0, rentas:toFloat(get("Rentas Necesarias")),
+      meses_desc:toInt(get("Cant. Meses Descuento")), plan_sin_aval:get("Plan Sin Aval")==="1",
+      video_ok:get("Status Video")==="OK", es_especial:(get("Especial")||"")==="Arriendo Especial",
       estado:get("Estado"), link_listing:get("Link Listing"), comentario:get("Comentario"), llave:get("Estatus LLave"),
     });
   }
@@ -588,11 +628,19 @@ function dormMatch(p){ if(st.dorm.size===0)return true;
   for(const d of st.dorm){if(d==="3+"){if(p.dormitorios>=3)return true;}else if(p.dormitorios==+d)return true;} return false;}
 function apply(){
   syncBadge();
+  /* Los resultados parten con comuna, búsqueda, dormitorios o disponibilidad.
+     Visitable y Extras solo afinan: marcarlos solos no debe "mostrar todo el inventario". */
+  const arranca = st.q || st.comuna || st.dorm.size || st.dias;
+  if(!arranca && activeCount()>0){
+    $("#count").textContent="Falta elegir una comuna";
+    $("#list").innerHTML='<div class="state"><span class="sicon">👆</span>Elige una <b>comuna</b> (o busca una dirección) y aplicaremos tambi&eacute;n los filtros que marcaste.</div>';
+    return;
+  }
   if(activeCount()===0){
     $("#count").textContent="Usa los filtros para comenzar";
     $("#list").innerHTML=DESK.matches
       ?'<div class="state">🔎 Elige un filtro (comuna, dormitorios, disponibilidad…) o busca una dirección para ver las propiedades disponibles.</div>'
-      :'<div class="state">👆 Elige una comuna arriba para ver las propiedades disponibles.<br><small>También puedes abrir <b>Filtros</b> para buscar por dirección u OP.</small></div>';
+      :'<div class="state"><span class="sicon">👆</span>Elige una comuna arriba para ver las propiedades disponibles.<br><small>También puedes abrir <b>Filtros</b> para buscar por dirección u OP.</small></div>';
     return;
   }
   const q=st.q.trim().toLowerCase();
@@ -627,23 +675,31 @@ function render(rows){
   $("#count").innerHTML="<b>"+rows.length+"</b> propiedades";
   const list=$("#list"); const shown=rows.slice(0,80);
   if(!shown.length){list.innerHTML='<div class="state">No hay propiedades con estos filtros.</div>';return;}
-  list.innerHTML=shown.map(p=>{
-    const disp=(p.estado||"").toLowerCase()==="lista para arrendar";
-    const badges=[p.dormitorios?`<span class="b">${p.dormitorios} dorm</span>`:"",
+  list.innerHTML=shown.map((p,i)=>{
+    const est=(p.estado||"").toLowerCase(), disp=est==="lista para arrendar";
+    /* Orden: estado y condiciones comerciales primero, después características */
+    const badges=[
+      disp?`<span class="b v">&#10003; Disponible</span>`:"",
+      est.startsWith("re-acond")?`<span class="b amb">&#128295; En reparaci&oacute;n</span>`:"",
+      est.includes("check-in")?`<span class="b amb">&#9203; Esperando check-in</span>`:"",
+      p.es_especial?`<span class="b d">&#11088; Arriendo especial</span>`:"",
+      p.descuento_pct>0?`<span class="b d">-${(+p.descuento_pct)}%${p.meses_desc?` x ${p.meses_desc} ${p.meses_desc===1?"mes":"meses"}`:""}</span>`:"",
+      p.sin_garantia?`<span class="b v">Sin garant&iacute;a</span>`:"",
+      p.dormitorios?`<span class="b">${p.dormitorios} dorm</span>`:"",
       p.banos?`<span class="b">${p.banos} ba&ntilde;o</span>`:"",
       p.m2_depto?`<span class="b">${(+p.m2_depto).toLocaleString("es-CL")} m&sup2;</span>`:"",
-      p.descuento_pct>0?`<span class="b d">-${(+p.descuento_pct)}% desc</span>`:"",
-      p.sin_garantia?`<span class="b v">Sin garant&iacute;a</span>`:"",
+      p.m2_terraza>0?`<span class="b">Terraza ${(+p.m2_terraza).toLocaleString("es-CL")} m&sup2;</span>`:"",
       p.estac_has?`<span class="b">&#128663; Estac.</span>`:"",
       p.bod_has?`<span class="b">Bodega</span>`:"",
       p.acepta_mascotas?`<span class="b d">&#128062; Mascotas</span>`:"",
-      p.requiere_aval?`<span class="b warn">Requiere aval</span>`:"",
+      p.plan_sin_aval?`<span class="b v">Plan sin aval</span>`:p.requiere_aval?`<span class="b warn">Requiere aval</span>`:"",
+      p.rentas>0?`<span class="b">Renta x${(+p.rentas).toLocaleString("es-CL")}</span>`:"",
       p.visitable?`<span class="b">Visitable</span>`:"",
-      disp?`<span class="b v">Disponible</span>`:"",
+      p.video_ok?`<span class="b">&#127909; Video</span>`:"",
       p.arrienda_al_toque?`<span class="b d">Al toque</span>`:"",
       llaveBadge(p.llave)].join("");
     const ver=p.link_listing?`<a class="btn ghost" target="_blank" href="${p.link_listing}">Ver</a>`:"";
-    return `<div class="card"><div class="ctop">
+    return `<div class="card" style="--i:${Math.min(i,10)}"><div class="ctop">
       <div><p class="tipo">${p.tipologia||"Depto"}</p><p class="meta">${p.comuna} &middot; <span class="opcopy" onclick='copyOP(${JSON.stringify(p.op)})'>OP ${p.op}</span>${p.orientacion?" &middot; "+esc(p.orientacion):""}</p></div>
       <div><p class="price">${clp(p.arriendo_total)}</p>${p.gc_total?`<p class="gc">+ GC ${clpTxt(p.gc_total)}</p>`:""}</div>
       </div><p class="dir">${p.direccion||""}</p><div class="badges">${badges}</div>
@@ -872,7 +928,12 @@ let INV_TS = null, INV_LOCAL = false, INV_NAME = "";  /* INV_NAME: nombre del ar
 function loadInv(text, ts, local){ const parsed=parseAssetplan(text);
   if(!parsed.properties.length) return false;
   DATA=parsed.properties; COMUNAS=parsed.comunas; INV_TS=ts; INV_LOCAL=local;
-  fillComunas(); apply(); setActualizado(); return true; }
+  fillComunas(); syncExtras(); apply(); setActualizado(); return true; }
+function syncExtras(){ const has={estac:p=>p.estac_has,bod:p=>p.bod_has,mascotas:p=>p.acepta_mascotas,
+    singar:p=>p.sin_garantia,desc:p=>p.descuento_pct>0,sinaval:p=>!p.requiere_aval};
+  document.querySelectorAll("#extras .chip").forEach(c=>{ const f=has[c.dataset.ex];
+    const ok=!f||DATA.some(f); c.style.display=ok?"":"none";
+    if(!ok&&st.extras.delete(c.dataset.ex)) c.classList.remove("on"); }); }
 function isToday(ts){ const d=new Date(ts), n=new Date(); return !isNaN(d)&&d.toDateString()===n.toDateString(); }
 function openUpdate(){ openSet(); const c=$("#updCard");
   setTimeout(()=>{ c.scrollIntoView({behavior:"smooth",block:"start"}); c.classList.remove("flash"); void c.offsetWidth; c.classList.add("flash"); },60); }
@@ -896,7 +957,7 @@ $("#csvFile").onchange=e=>{ const f=e.target.files[0]; e.target.value=""; if(!f)
 
 /* ---------- Respaldo: inventario del repositorio (si este equipo aún no carga uno) ---------- */
 function showLoading(){ $("#count").textContent="";
-  $("#list").innerHTML='<div class="state"><div class="spin"></div>Cargando inventario...</div>'; }
+  $("#list").innerHTML='<div class="skel"></div><div class="skel"></div><div class="skel"></div>'; }
 function showError(msg){ $("#count").textContent="";
   $("#list").innerHTML=`<div class="state">No se pudo cargar el inventario.<br><span style="font-size:12px">${msg}</span>`+
     `<br><button class="retry" onclick="boot()">Reintentar</button></div>`; }
