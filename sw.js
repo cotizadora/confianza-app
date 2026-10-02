@@ -23,6 +23,8 @@ self.addEventListener("fetch", (e) => {
     e.respondWith(fetch(e.request));
     return;
   }
+  // Videos de tutoriales: directo a la red (pesan mucho y se piden por partes)
+  if (url.pathname.includes("/tutoriales/videos/")) return;
   // Resto (la app): red primero, con caché de respaldo si no hay conexión.
   e.respondWith(
     fetch(e.request)

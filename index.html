@@ -247,6 +247,11 @@
   .ubtn:active{transform:translateY(1px)}
   .route{display:inline-block;font-size:12px;font-weight:700;color:var(--title);background:var(--field);border:1px solid var(--border);
     padding:2px 8px;border-radius:7px;margin:2px 0}
+  .tutpanel{position:fixed;inset:0;z-index:70;background:var(--page);display:none;flex-direction:column}
+  .tutpanel.on{display:flex}
+  .tutbar{display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid var(--border);background:var(--bg2);color:var(--muted);font-size:13px;font-weight:700}
+  .tutback{border:1px solid var(--border);background:var(--field);color:var(--title);font-weight:800;font-size:13px;padding:9px 13px;border-radius:11px;cursor:pointer;font-family:inherit}
+  .tutpanel iframe{flex:1;width:100%;border:0;background:#fff}
   .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--title);color:var(--page);
     padding:11px 20px;border-radius:999px;font-weight:700;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:80;box-shadow:0 10px 30px rgba(0,0,0,.4)}
   .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -394,8 +399,8 @@
       <!-- Tutoriales: sitio amigo de la empresa (proyecto aparte) -->
       <div class="mcard">
         <div class="mtitle">&#128218; Tutoriales y gu&iacute;as</div>
-        <p class="mnote">Gu&iacute;as paso a paso de Confianza Inmobiliaria para ejecutivos.</p>
-        <div class="ubtns"><a class="ubtn main" href="https://seccion-administrativa.github.io/confianza-inmobiliaria/" target="_blank" rel="noopener">&#8599; Ver tutoriales</a></div>
+        <p class="mnote">Videos paso a paso de Confianza Inmobiliaria: postular, aval, cotizaci&oacute;n, visitas y m&aacute;s.</p>
+        <div class="ubtns"><button class="ubtn main" id="openTut">&#9654;&#65039; Ver tutoriales</button></div>
       </div>
 
       <!-- Firma -->
@@ -469,6 +474,12 @@
       <p class="anote">Se abren en pesta&ntilde;a nueva &mdash; usa <b>pantalla dividida</b> para verlos junto a la app.
         El archivo debe llamarse <b>export.csv</b> y debes estar en GitHub como <b>cotizadora</b>.</p>
     </div>
+  </div>
+
+  <!-- Tutoriales dentro de la app (carpeta tutoriales/, mismo sitio) -->
+  <div class="tutpanel" id="tutPanel">
+    <div class="tutbar"><button class="tutback" id="tutBack">&#8592; Volver a la app</button><span>Tutoriales</span></div>
+    <iframe id="tutFrame" title="Tutoriales Confianza" allow="fullscreen" allowfullscreen></iframe>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -815,6 +826,11 @@ function openSet(){ document.querySelectorAll("#segTheme button").forEach(b=>b.c
   $("#fNombre").value=cfg.nombre;$("#fCargo").value=cfg.cargo;$("#fTel").value=cfg.tel||"";$("#fSello").value=cfg.sello||"";
   updateInstallUI();$("#sScrim").classList.add("on");}
 $("#openSet").onclick=openSet;
+/* Tutoriales: se cargan la primera vez que se abren (los videos pesan) */
+function openTut(){ const f=$("#tutFrame"); if(!f.src) f.src="tutoriales/";
+  $("#sScrim").classList.remove("on"); $("#tutPanel").classList.add("on"); document.body.style.overflow="hidden"; }
+function closeTut(){ $("#tutPanel").classList.remove("on"); document.body.style.overflow=""; }
+$("#openTut").onclick=openTut; $("#tutBack").onclick=closeTut;
 $("#mLogo").src=$(".brand-logo").src;
 $("#sClose").onclick=()=>$("#sScrim").classList.remove("on");
 $("#sScrim").onclick=e=>{if(e.target.id==="sScrim")$("#sScrim").classList.remove("on");};
