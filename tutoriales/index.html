@@ -402,7 +402,10 @@ footer a { color:var(--accent); text-decoration:none; font-weight:700; }
   .result-list { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:18px; align-items:start; }
   .section .result-list { grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); }
 }
-  </style>
+  /* Integrado en la app de Confianza: la cabecera (logo + tuerca) la pone la app */
+.header-top { display:none; }
+#settingsModal { display:none !important; }
+</style>
 </head>
 <body>
 <div class="app">
@@ -531,8 +534,9 @@ function debounce(fn,ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(
 
 // ---------- configuración ----------
 function loadConfig(){
-  try{ const c=JSON.parse(localStorage.getItem('confianza_tut_cfg_v1')||'{}');
-    if(c.tema) st.tema=c.tema; if(c.acento) st.acento=c.acento; }catch{}
+  /* Tema y acento: los mismos que eligió el ejecutivo en la tuerca de la app */
+  try{ const c=JSON.parse(localStorage.getItem('confianza_cfg_v1')||'{}');
+    if(c.theme) st.tema=c.theme; if(c.accent) st.acento=c.accent; }catch{}
   applyTheme();
 }
 function applyTheme(){
@@ -541,7 +545,6 @@ function applyTheme(){
   document.querySelector('meta[name="theme-color"]').setAttribute('content', st.tema==='dark'?'#181c21':'#ffffff');
   document.querySelectorAll('[data-theme-btn]').forEach(b=>b.classList.toggle('active', b.dataset.themeBtn===st.tema));
   document.querySelectorAll('[data-accent-btn]').forEach(b=>b.classList.toggle('active', b.dataset.accentBtn===st.acento));
-  try{ localStorage.setItem('confianza_tut_cfg_v1',JSON.stringify({tema:st.tema,acento:st.acento})); }catch{}
 }
 
 // ---------- carga de datos ----------
