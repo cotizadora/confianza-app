@@ -822,7 +822,7 @@ $("#sSave").onclick=()=>{cfg.nombre=$("#fNombre").value.trim();cfg.cargo=$("#fCa
 
 /* ---------- Inventario local: cada ejecutivo carga el CSV de Assetplan en su equipo ---------- */
 const INV_KEY = "confianza_inv_v1";
-let INV_TS = null, INV_LOCAL = false;
+let INV_TS = null, INV_LOCAL = false, INV_NAME = "";  /* INV_NAME: nombre del archivo cargado, p. ej. "export (3).csv" */
 function loadInv(text, ts, local){ const parsed=parseAssetplan(text);
   if(!parsed.properties.length) return false;
   DATA=parsed.properties; COMUNAS=parsed.comunas; INV_TS=ts; INV_LOCAL=local;
@@ -841,9 +841,9 @@ $("#csvFile").onchange=e=>{ const f=e.target.files[0]; e.target.value=""; if(!f)
   /* La fecha del inventario es la del archivo (cuándo se descargó), no la de hoy: así un archivo viejo no pasa por nuevo */
   const fd = f.lastModified ? new Date(f.lastModified) : new Date();
   if(!isToday(fd) && !confirm("Este archivo es del "+fmtFecha(fd)+", no de hoy.\n\nLo ideal es descargar uno nuevo desde Assetplan (paso 2). ¿Cargarlo igual?")) return;
-  readCsv(f).then(text=>{ const ts=fd.toISOString();
-    if(!loadInv(text,ts,true)){ toast("Ese archivo no trae propiedades. Vuelve a exportarlo."); return; }
-    try{ localStorage.setItem(INV_KEY,JSON.stringify({text,ts})); }catch(err){ toast("Cargado, pero no se pudo guardar en este equipo"); }
+  readCsv(f).then(text=>{ const ts=fd.toISOString(), prevName=INV_NAME; INV_NAME=f.name||"";
+    if(!loadInv(text,ts,true)){ INV_NAME=prevName; toast("Ese archivo no trae propiedades. Vuelve a exportarlo."); return; }
+    try{ localStorage.setItem(INV_KEY,JSON.stringify({text,ts,name:INV_NAME})); }catch(err){ toast("Cargado, pero no se pudo guardar en este equipo"); }
     $("#sScrim").classList.remove("on"); window.scrollTo({top:0,behavior:"smooth"});
     toast("Inventario actualizado: "+DATA.length+" propiedades ✓"); })
   .catch(()=>toast("No se pudo leer el archivo")); };
@@ -857,16 +857,17 @@ function showError(msg){ $("#count").textContent="";
 function fmtFecha(s){ try{ const d=new Date(s); if(isNaN(d))return null;
   return d.toLocaleString("es-CL",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}); }catch(e){return null;} }
 function setActualizado(){ const f=fmtFecha(INV_TS), b=$("#banner"), u=$("#uStatus");
+  const nm = INV_LOCAL&&INV_NAME ? " &middot; <b>&#128196; "+esc(INV_NAME)+"</b>" : "";
   const fresh = INV_LOCAL && isToday(INV_TS);
   b.classList.toggle("warn",!fresh); u.classList.toggle("ok",fresh);
-  if(fresh){ b.innerHTML="&#10003; Inventario actualizado hoy &middot; "+f.split(", ").pop()+" &middot; <u>actualizar</u>";
-    u.textContent="✓ Actualizado hoy a las "+f.split(", ").pop()+" · "+DATA.length+" propiedades"; }
-  else{ b.innerHTML="&#9888;&#65039; Actualiza el inventario"+(f?" (&uacute;ltimo: "+f+")":"")+" &middot; <u>toca aqu&iacute;</u>";
-    u.textContent = INV_LOCAL ? "Tu inventario es del "+f+". Actual&iacute;zalo." : "Aún no has cargado un inventario en este equipo"; }
+  if(fresh){ b.innerHTML="&#10003; Inventario actualizado hoy &middot; "+f.split(", ").pop()+nm+" &middot; <u>actualizar</u>";
+    u.innerHTML="&#10003; Actualizado hoy a las "+f.split(", ").pop()+" &middot; "+DATA.length+" propiedades"+nm; return; }
+  else{ b.innerHTML="&#9888;&#65039; Actualiza el inventario"+(f?" (&uacute;ltimo: "+f+")":"")+nm+" &middot; <u>toca aqu&iacute;</u>";
+    u.textContent = INV_LOCAL ? "Tu inventario es del "+f+nm+". Actual&iacute;zalo." : "Aún no has cargado un inventario en este equipo"; }
   u.innerHTML=u.textContent; }
 function boot(){
   let saved=null; try{ saved=JSON.parse(localStorage.getItem(INV_KEY)||"null"); }catch(e){}
-  if(saved&&saved.text&&loadInv(saved.text,saved.ts,true)) return;
+  if(saved&&saved.text){ INV_NAME=saved.name||""; if(loadInv(saved.text,saved.ts,true)) return; INV_NAME=""; }
   showLoading(); let lm=null;
   fetch(CSV_URL+"?t="+Date.now(),{cache:"no-store"})
     .then(r=>{ if(!r.ok) throw new Error("HTTP "+r.status+" al leer "+CSV_URL); lm=r.headers.get("last-modified"); return r.text(); })
