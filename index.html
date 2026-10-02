@@ -441,7 +441,7 @@
       <!-- Dormitorios + disponibilidad + visitable en una sola fila -->
       <div class="row frow3">
         <div><div class="flabel">Dormitorios</div>
-          <select id="dorm"><option value="">Todos</option><option value="est">Estudio</option><option value="1">1</option><option value="2">2</option><option value="3+">3+</option></select></div>
+          <select id="dorm"><option value="">Todos</option><option value="est">Estudio</option><option value="lof">Loft</option><option value="dup">D&uacute;plex</option><option value="1">1</option><option value="2">2</option><option value="3+">3+</option></select></div>
         <div><div class="flabel">Disponible en</div>
           <select id="dias"><option value="">Cualquiera</option><option value="7">7 d&iacute;as</option><option value="14">14 d&iacute;as</option><option value="30">30 d&iacute;as</option></select></div>
         <div class="fcheck"><div class="flabel">Visitable</div>
@@ -704,9 +704,11 @@ function fillComunas(){ const csel=$("#comuna"); csel.length=1;
 function score(p){let s=0; if(p.arrienda_al_toque)s+=100;
   if((p.estado||"").toLowerCase()==="lista para arrendar")s+=50;
   if(p.max_inicio_dias!=null&&p.max_inicio_dias<=30)s+=20; if(p.acepta_mascotas)s+=5; return s;}
-const esEstudio=p=>/estudio|studio/i.test(p.tipologia||"");
+const TIPOS_ESP={est:["Estudio",/estudio|studio/i],lof:["Loft",/loft/i],dup:["Dúplex",/d[uú]plex/i]};
+const tipoEsp=p=>{ for(const k in TIPOS_ESP) if(TIPOS_ESP[k][1].test(p.tipologia||"")) return k; return null; };
+const esEstudio=p=>tipoEsp(p)==="est";
 function dormMatch(p){ if(st.dorm.size===0)return true;
-  for(const d of st.dorm){if(d==="est"){if(esEstudio(p))return true;}else if(d==="3+"){if(p.dormitorios>=3)return true;}else if(p.dormitorios==+d)return true;} return false;}
+  for(const d of st.dorm){if(TIPOS_ESP[d]){if(tipoEsp(p)===d)return true;}else if(d==="3+"){if(p.dormitorios>=3)return true;}else if(p.dormitorios==+d)return true;} return false;}
 function apply(){
   syncBadge();
   /* Sin comuna = "Todas las comunas": cualquier filtro busca en todo el inventario */
@@ -748,7 +750,7 @@ function llaveBadge(v){ v=(v||"").trim().replace(/Luc�a/g,"Lucía").replace(/�
   if(!v)return""; const no=/no disponible/i.test(v);
   return `<span class="b${no?" warn":""}">&#128273; ${esc(v)}</span>`; }
 function render(rows){
-  $("#count").innerHTML="<b>"+rows.length+"</b> propiedades";
+  $("#count").innerHTML="<b>"+rows.length+"</b> "+(rows.length===1?"propiedad":"propiedades");
   const list=$("#list"); const shown=rows.slice(0,80);
   if(!shown.length){list.innerHTML='<div class="state">No hay propiedades con estos filtros.</div>';return;}
   list.innerHTML=shown.map((p,i)=>{
@@ -763,7 +765,7 @@ function render(rows){
       p.es_especial?`<span class="b d">&#11088; Arriendo especial</span>`:"",
       p.descuento_pct>0?`<span class="b d${X("desc")}">-${(+p.descuento_pct)}%${p.meses_desc?` x ${p.meses_desc} ${p.meses_desc===1?"mes":"meses"}`:""}</span>`:"",
       p.sin_garantia?`<span class="b v${X("singar")}">Sin garant&iacute;a</span>`:"",
-      esEstudio(p)?`<span class="b${H(st.dorm.size)}">Estudio</span>`:p.dormitorios?`<span class="b${H(st.dorm.size)}">${p.dormitorios} dorm</span>`:"",
+      tipoEsp(p)?`<span class="b${H(st.dorm.size)}">${TIPOS_ESP[tipoEsp(p)][0]}</span>`:p.dormitorios?`<span class="b${H(st.dorm.size)}">${p.dormitorios} dorm</span>`:"",
       p.banos?`<span class="b">${p.banos} ba&ntilde;o</span>`:"",
       p.m2_depto?`<span class="b">${(+p.m2_depto).toLocaleString("es-CL")} m&sup2;</span>`:"",
       p.m2_terraza>0?`<span class="b">Terraza ${(+p.m2_terraza).toLocaleString("es-CL")} m&sup2;</span>`:"",
@@ -793,7 +795,7 @@ function render(rows){
 }
 function postText(p){
   const L=["🏠 *ARRIENDO DISPONIBLE*",""];
-  if(p.tipologia)L.push(esEstudio(p)?`🛏️ Estudio  (${p.banos||1}B)`:`🛏️ ${p.tipologia}  (${p.dormitorios}D / ${p.banos}B)`);
+  if(p.tipologia)L.push(tipoEsp(p)?`🛏️ ${TIPOS_ESP[tipoEsp(p)][0]}  (${p.banos||1}B)`:`🛏️ ${p.tipologia}  (${p.dormitorios}D / ${p.banos}B)`);
   L.push(`📍 ${p.direccion}, ${p.comuna}`);
   if(p.condominio)L.push(`🏢 ${p.condominio}`);
   if(p.m2_depto){let m=`📐 ${(+p.m2_depto)} m2`;if(p.m2_terraza)m+=` + ${(+p.m2_terraza)} m2 terraza`;L.push(m);}
@@ -813,7 +815,7 @@ function orient(c){const m={N:"Norte",S:"Sur",O:"Oriente",P:"Poniente"};
 function distrib(p){
   const d=p.dormitorios?(p.dormitorios+" dormitorio"+(p.dormitorios>1?"s":"")):null;
   const b=p.banos?(p.banos+" baño"+(p.banos>1?"s":"")):null;
-  if(esEstudio(p)) return "tipo estudio"+(b?" con "+b:"");
+  if(tipoEsp(p)) return "tipo "+TIPOS_ESP[tipoEsp(p)][0].toLowerCase()+(b?" con "+b:"");
   return [d,b].filter(Boolean).join(" y ");
 }
 
@@ -862,7 +864,7 @@ function fbText(p){
 function waText(p){
   const tel=cfg.tel||DEFAULT_PHONE, dd=distrib(p);
   const L=["🏠 *Departamento en arriendo en "+p.comuna+"*",""];
-  let intro="Tengo disponible un lindo departamento"+(dd?(esEstudio(p)?" ":" de ")+dd:"")+" ubicado en "+p.direccion;
+  let intro="Tengo disponible un lindo departamento"+(dd?(tipoEsp(p)?" ":" de ")+dd:"")+" ubicado en "+p.direccion;
   if(p.condominio)intro+=", en el condominio "+p.condominio;
   intro+=".";
   L.push(intro,"");
