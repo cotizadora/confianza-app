@@ -351,7 +351,7 @@ const MAP={ "Especial":"especial","OP":"op","Direccion":"direccion","Comuna":"co
   "Tipologia":"tipologia","Estac":"estac","Bod":"bod","Visitable":"visitable","Arriendo Total":"arriendo_total",
   "GC Total":"gc_total","% Descuento":"descuento_pct","Orientacion":"orientacion","m2 Depto":"m2_depto",
   "m2 Terraza":"m2_terraza","Arrienda al toque":"arrienda_al_toque","Acepta Mascotas?":"acepta_mascotas",
-  "Link Listing":"link_listing","Unidad":"unidad","Estado":"estado","Comentario":"comentario"};
+  "Link Listing":"link_listing","Unidad":"unidad","Estado":"estado","Comentario":"comentario","Estatus LLave":"llave"};
 function countChar(s,c){let n=0;for(let i=0;i<s.length;i++)if(s[i]===c)n++;return n;}
 function parseAssetplan(text){
   text = text.replace(/^﻿/,"").replace(/\r\n/g,"\n").replace(/\r/g,"\n");
@@ -385,7 +385,7 @@ function parseAssetplan(text){
       bod_has: !!bodV && bodV!=="0" && bodV!=="no",
       sin_garantia:toBool(get("Sin Garantia")), requiere_aval:get("Requiere Aval(es)")==="1",
       orientacion:get("Orientacion"),
-      estado:get("Estado"), link_listing:get("Link Listing"), comentario:get("Comentario"),
+      estado:get("Estado"), link_listing:get("Link Listing"), comentario:get("Comentario"), llave:get("Estatus LLave"),
     });
   }
   const comunas=[...new Set(props.map(p=>p.comuna).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es"));
@@ -442,6 +442,10 @@ function apply(){
     disponibilidad:(a,b)=>(a.max_inicio_dias??9999)-(b.max_inicio_dias??9999)}[st.orden];
   r.sort(s); render(r);
 }
+/* Estatus de llave (dato interno, solo en la tarjeta; nunca va en los posts). El export de Assetplan a veces trae "�" en vez de tildes. */
+function llaveBadge(v){ v=(v||"").trim().replace(/Luc�a/g,"Lucía").replace(/�/g,"");
+  if(!v)return""; const no=/no disponible/i.test(v);
+  return `<span class="b${no?" warn":""}">&#128273; ${esc(v)}</span>`; }
 function render(rows){
   $("#count").innerHTML="<b>"+rows.length+"</b> propiedades";
   const list=$("#list"); const shown=rows.slice(0,80);
@@ -459,7 +463,8 @@ function render(rows){
       p.requiere_aval?`<span class="b warn">Requiere aval</span>`:"",
       p.visitable?`<span class="b">Visitable</span>`:"",
       disp?`<span class="b v">Disponible</span>`:"",
-      p.arrienda_al_toque?`<span class="b d">Al toque</span>`:""].join("");
+      p.arrienda_al_toque?`<span class="b d">Al toque</span>`:"",
+      llaveBadge(p.llave)].join("");
     const ver=p.link_listing?`<a class="btn ghost" target="_blank" href="${p.link_listing}">Ver</a>`:"";
     return `<div class="card"><div class="ctop">
       <div><p class="tipo">${p.tipologia||"Depto"}</p><p class="meta">${p.comuna} &middot; <span class="opcopy" onclick='copyOP(${JSON.stringify(p.op)})'>OP ${p.op}</span>${p.orientacion?" &middot; "+esc(p.orientacion):""}</p></div>
