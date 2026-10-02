@@ -204,6 +204,10 @@
   .banner{position:relative;overflow:hidden}
   .banner.warn::after{content:"";position:absolute;top:0;bottom:0;left:0;width:30%;pointer-events:none;
     background:linear-gradient(90deg,transparent,color-mix(in srgb,#fff 18%,transparent),transparent);animation:shine 3.2s ease-in-out infinite}
+  .hand{position:absolute;z-index:30;pointer-events:none;width:0;height:0}
+  .hfinger{position:absolute;left:-14px;top:-2px;font-size:32px;line-height:1;filter:drop-shadow(0 4px 8px rgba(0,0,0,.45))}
+  .hripple{position:absolute;left:0;top:0;width:46px;height:46px;border-radius:50%;
+    border:3px solid var(--accent);background:color-mix(in srgb,var(--accent) 25%,transparent)}
   .sicon{display:block;font-size:30px;margin-bottom:10px;animation:floaty 2.4s ease-in-out infinite}
   /* esqueleto de carga */
   .skel{height:210px;border-radius:var(--radius);border:1px solid var(--border);
@@ -357,7 +361,7 @@
     </div>
     <div class="fwrap" id="fwrap"><div class="finner"><div class="filters">
       <div><div class="flabel">Buscar</div><input id="q" type="search" placeholder="Direccion, condominio, comentario, OP..."/></div>
-      <div id="comunaSlot"><div class="flabel">Comuna</div><select id="comuna"><option value="">Todas</option></select></div>
+      <div id="comunaSlot"><div class="flabel">Comuna</div><select id="comuna"><option value="">Todas las comunas</option></select></div>
       <!-- Dormitorios + disponibilidad + visitable en una sola fila -->
       <div class="row frow3">
         <div><div class="flabel">Dormitorios</div>
@@ -628,19 +632,14 @@ function dormMatch(p){ if(st.dorm.size===0)return true;
   for(const d of st.dorm){if(d==="3+"){if(p.dormitorios>=3)return true;}else if(p.dormitorios==+d)return true;} return false;}
 function apply(){
   syncBadge();
-  /* Los resultados parten con comuna, búsqueda, dormitorios o disponibilidad.
-     Visitable y Extras solo afinan: marcarlos solos no debe "mostrar todo el inventario". */
-  const arranca = st.q || st.comuna || st.dorm.size || st.dias;
-  if(!arranca && activeCount()>0){
-    $("#count").textContent="Falta elegir una comuna";
-    $("#list").innerHTML='<div class="state"><span class="sicon">👆</span>Elige una <b>comuna</b> (o busca una dirección) y aplicaremos tambi&eacute;n los filtros que marcaste.</div>';
-    return;
-  }
+  /* Sin comuna = "Todas las comunas": cualquier filtro busca en todo el inventario */
+  stopHand();
   if(activeCount()===0){
     $("#count").textContent="Usa los filtros para comenzar";
     $("#list").innerHTML=DESK.matches
       ?'<div class="state">🔎 Elige un filtro (comuna, dormitorios, disponibilidad…) o busca una dirección para ver las propiedades disponibles.</div>'
-      :'<div class="state"><span class="sicon">👆</span>Elige una comuna arriba para ver las propiedades disponibles.<br><small>También puedes abrir <b>Filtros</b> para buscar por dirección u OP.</small></div>';
+      :'<div class="state" id="emptyState">Elige una comuna arriba para ver sus propiedades.<br><small>O usa <b>Filtros</b> para buscar en todas las comunas.</small></div>';
+    if(!DESK.matches) guideHand();
     return;
   }
   const q=st.q.trim().toLowerCase();
@@ -692,7 +691,7 @@ function render(rows){
       p.estac_has?`<span class="b">&#128663; Estac.</span>`:"",
       p.bod_has?`<span class="b">Bodega</span>`:"",
       p.acepta_mascotas?`<span class="b d">&#128062; Mascotas</span>`:"",
-      p.plan_sin_aval?`<span class="b v">Plan sin aval</span>`:p.requiere_aval?`<span class="b warn">Requiere aval</span>`:"",
+      p.plan_sin_aval?`<span class="b v">Plan sin aval</span>`:p.requiere_aval?`<span class="b warn">Requiere aval</span>`:`<span class="b v">Sin aval</span>`,
       p.rentas>0?`<span class="b">Renta x${(+p.rentas).toLocaleString("es-CL")}</span>`:"",
       p.visitable?`<span class="b">Visitable</span>`:"",
       p.video_ok?`<span class="b">&#127909; Video</span>`:"",
@@ -884,6 +883,37 @@ $("#reset").onclick=resetAll;$("#fReset").onclick=resetAll;
 function activeCount(){let n=0;if(st.q)n++;if(st.comuna)n++;if(st.dorm.size)n++;if(st.dias)n++;if(st.visitable)n++;if(st.extras.size)n++;return n;}
 function syncBadge(){const n=activeCount();$("#fBadge").textContent=n?" ("+n+")":"";
   $("#fhero").classList.toggle("done",!!st.comuna);$("#fReset").classList.toggle("on",n>0);}
+/* Mano guía (celular, pantalla inicial): recorre el camino hasta el selector de comuna y simula el toque */
+let HAND=null;
+function stopHand(){ if(HAND){ HAND.remove(); HAND=null; } }
+function guideHand(){ stopHand();
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  requestAnimationFrame(()=>{ const from=$("#emptyState"), to=$("#comuna"); if(!from||!to) return;
+    const a=from.getBoundingClientRect(), b=to.getBoundingClientRect(), sx=scrollX, sy=scrollY;
+    const x0=a.left+a.width/2+sx, y0=a.top+sy-6;                 /* sale de arriba del mensaje */
+    const x1=b.left+b.width*0.72+sx, y1=b.top+b.height*0.55+sy;  /* llega dentro del selector */
+    const h=document.createElement("div"); h.className="hand";
+    h.innerHTML='<span class="hripple"></span><span class="hfinger">&#128070;</span>';
+    h.style.left=x0+"px"; h.style.top=y0+"px"; document.body.appendChild(h); HAND=h;
+    const dx=x1-x0, dy=y1-y0, mid=`translate(${dx*0.35}px,${dy*0.55}px)`;
+    const opt={duration:2600,delay:500,iterations:3,fill:"both",easing:"cubic-bezier(.45,0,.25,1)"};
+    h.animate([
+      {transform:"translate(0,0)",opacity:0,offset:0},
+      {transform:"translate(0,0)",opacity:1,offset:.12},
+      {transform:mid,opacity:1,offset:.38},
+      {transform:`translate(${dx}px,${dy}px)`,opacity:1,offset:.6},
+      {transform:`translate(${dx}px,${dy}px) scale(.82)`,opacity:1,offset:.68},
+      {transform:`translate(${dx}px,${dy}px)`,opacity:1,offset:.76},
+      {transform:`translate(${dx}px,${dy}px)`,opacity:0,offset:1}],opt)
+      .finished.then(()=>{ if(HAND===h) stopHand(); }).catch(()=>{});
+    h.querySelector(".hripple").animate([
+      {transform:"translate(-50%,-50%) scale(0)",opacity:0,offset:0},
+      {transform:"translate(-50%,-50%) scale(0)",opacity:0,offset:.64},
+      {transform:"translate(-50%,-50%) scale(.4)",opacity:.9,offset:.68},
+      {transform:"translate(-50%,-50%) scale(1.6)",opacity:0,offset:.9},
+      {transform:"translate(-50%,-50%) scale(1.6)",opacity:0,offset:1}],opt);
+  }); }
+["pointerdown","keydown"].forEach(ev=>addEventListener(ev,stopHand,{passive:true}));
 function setFiltersOpen(open){$("#fwrap").classList.toggle("open",open);$("#fToggle").classList.toggle("open",open);$("#fToggle").setAttribute("aria-expanded",open);}
 $("#fToggle").onclick=()=>setFiltersOpen(!$("#fwrap").classList.contains("open"));
 /* Celular: el selector de comuna sale del menú y queda arriba como primer paso. PC: vuelve al menú lateral. */
@@ -891,7 +921,7 @@ const DESK=matchMedia("(min-width:900px)");
 function placeComuna(){const sel=$("#comuna");
   if(DESK.matches)$("#comunaSlot").appendChild(sel);else $("#fhero").appendChild(sel);
   $("#comunaSlot").style.display=DESK.matches?"":"none";
-  sel.options[0].textContent=DESK.matches?"Todas":"Toca para elegir una comuna";}
+  sel.options[0].textContent="Todas las comunas";}
 placeComuna();DESK.addEventListener("change",placeComuna);
 
 function openSet(){ document.querySelectorAll("#segTheme button").forEach(b=>b.classList.toggle("on",b.dataset.t===cfg.theme));
