@@ -58,7 +58,13 @@
   .gear:hover{border-color:var(--accent);color:var(--accent)}
   .filters{padding:16px 20px 18px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid var(--border)}
   /* Filtros en menú desplegable (colapsable) para no ocupar tanto alto */
-  .ftbar{padding:14px 18px 0}
+  .ftbar{padding:14px 18px 0;display:flex;gap:9px}
+  /* Botón reiniciar: deja la app como recién abierta */
+  .freset{flex:0 0 auto;width:48px;border-radius:12px;border:1px solid var(--border);background:var(--field);
+    color:var(--muted);font-size:20px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;
+    transition:border-color .15s var(--ease-out),color .15s var(--ease-out),transform .1s var(--ease-out)}
+  .freset.on{color:var(--accent);border-color:var(--accent)}
+  .freset:active{transform:rotate(-90deg)}
   .ftoggle{width:100%;display:flex;align-items:center;gap:8px;background:var(--field);border:1px solid var(--border);
     color:var(--title);font-weight:700;font-size:14px;padding:12px 15px;border-radius:12px;cursor:pointer;font-family:inherit;
     transition:border-color .15s var(--ease-out),transform .1s var(--ease-out)}
@@ -225,6 +231,7 @@
     <div class="fhero" id="fhero"><div class="fhero-lbl">&#128205; &iquest;En qu&eacute; comuna buscas?</div></div>
     <div class="ftbar">
       <button id="fToggle" class="ftoggle" aria-expanded="false">Filtros<span class="fbadge" id="fBadge"></span><span class="fcaret">&#9662;</span></button>
+      <button id="fReset" class="freset" aria-label="Reiniciar filtros" title="Reiniciar">&#8635;</button>
     </div>
     <div class="fwrap" id="fwrap"><div class="finner"><div class="filters">
       <div><div class="flabel">Buscar</div><input id="q" type="search" placeholder="Direccion, condominio, comentario, OP..."/></div>
@@ -257,7 +264,7 @@
         </select></div>
     </div></div></div>
 
-    <div class="bar"><span id="count"></span><span class="reset" id="reset">Limpiar &#10005;</span></div>
+    <div class="bar"><span id="count"></span><span class="reset" id="reset">&#8635; Reiniciar</span></div>
     <div class="list" id="list"></div>
 
     <footer>
@@ -641,14 +648,16 @@ $("#dias").onchange=e=>{st.dias=e.target.value;apply();};
 $("#visit").onchange=e=>{st.visitable=e.target.checked?"si":"";apply();};
 document.querySelectorAll("#extras .chip").forEach(b=>b.onclick=()=>{const ex=b.dataset.ex;
   st.extras.has(ex)?st.extras.delete(ex):st.extras.add(ex);b.classList.toggle("on");apply();});
-$("#reset").onclick=()=>{st.q=st.comuna=st.dias=st.visitable="";st.dorm.clear();st.extras.clear();st.orden="ranking";
+function resetAll(){st.q=st.comuna=st.dias=st.visitable="";st.dorm.clear();st.extras.clear();st.orden="ranking";
   $("#q").value="";$("#comuna").value="";$("#orden").value="ranking";
   $("#dorm").value="";$("#dias").value="";$("#visit").checked=false;
   document.querySelectorAll(".chip.on").forEach(c=>c.classList.remove("on"));apply();
-  if(!DESK.matches)setFiltersOpen(false);};
+  if(!DESK.matches)setFiltersOpen(false);
+  window.scrollTo({top:0,behavior:"smooth"});}
+$("#reset").onclick=resetAll;$("#fReset").onclick=resetAll;
 function activeCount(){let n=0;if(st.q)n++;if(st.comuna)n++;if(st.dorm.size)n++;if(st.dias)n++;if(st.visitable)n++;if(st.extras.size)n++;return n;}
 function syncBadge(){const n=activeCount();$("#fBadge").textContent=n?" ("+n+")":"";
-  $("#fhero").classList.toggle("done",!!st.comuna);}
+  $("#fhero").classList.toggle("done",!!st.comuna);$("#fReset").classList.toggle("on",n>0);}
 function setFiltersOpen(open){$("#fwrap").classList.toggle("open",open);$("#fToggle").classList.toggle("open",open);$("#fToggle").setAttribute("aria-expanded",open);}
 $("#fToggle").onclick=()=>setFiltersOpen(!$("#fwrap").classList.contains("open"));
 /* Celular: el selector de comuna sale del menú y queda arriba como primer paso. PC: vuelve al menú lateral. */
