@@ -82,6 +82,12 @@
   @media (hover:hover){select:hover,input:hover,textarea:hover{border-color:color-mix(in srgb,var(--accent) 40%,var(--border))}}
   select:focus,input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
   .row{display:flex;gap:9px}.row>div{flex:1}
+  .frow3>div{min-width:0}.frow3>.fcheck{flex:0 0 auto}
+  .frow3 select{padding:11px 8px}
+  .chk{display:flex;align-items:center;gap:7px;height:44px;padding:0 12px;border:1px solid var(--border);border-radius:12px;
+    background:var(--field);color:var(--title);font-weight:700;font-size:14px;cursor:pointer}
+  .chk input{width:18px;height:18px;margin:0;padding:0;accent-color:var(--accent);cursor:pointer}
+  .chk:has(input:checked){border-color:var(--accent)}
   .chips{display:flex;gap:8px}
   .chip{flex:1;text-align:center;padding:7px 0;border-radius:10px;border:1px solid var(--border);
     color:var(--txt);font-weight:700;font-size:14px;cursor:pointer;background:var(--field);user-select:none;
@@ -223,23 +229,15 @@
     <div class="fwrap" id="fwrap"><div class="finner"><div class="filters">
       <div><div class="flabel">Buscar</div><input id="q" type="search" placeholder="Direccion, condominio, comentario, OP..."/></div>
       <div id="comunaSlot"><div class="flabel">Comuna</div><select id="comuna"><option value="">Todas</option></select></div>
-      <div><div class="flabel">Dormitorios</div>
-        <div class="chips" id="dorm">
-          <button class="chip" data-d="1">1</button>
-          <button class="chip" data-d="2">2</button>
-          <button class="chip" data-d="3+">3+</button>
-        </div></div>
-      <div><div class="flabel">Disponibilidad</div>
-        <div class="chips" id="dias">
-          <button class="chip" data-x="7">7 dias</button>
-          <button class="chip" data-x="14">14 dias</button>
-          <button class="chip" data-x="30">30 dias</button>
-        </div></div>
-      <div><div class="flabel">Visitable</div>
-        <div class="chips" id="visit">
-          <button class="chip" data-v="si">Si</button>
-          <button class="chip" data-v="no">No</button>
-        </div></div>
+      <!-- Dormitorios + disponibilidad + visitable en una sola fila -->
+      <div class="row frow3">
+        <div><div class="flabel">Dormitorios</div>
+          <select id="dorm"><option value="">Todos</option><option value="1">1</option><option value="2">2</option><option value="3+">3+</option></select></div>
+        <div><div class="flabel">Disponible en</div>
+          <select id="dias"><option value="">Cualquiera</option><option value="7">7 d&iacute;as</option><option value="14">14 d&iacute;as</option><option value="30">30 d&iacute;as</option></select></div>
+        <div class="fcheck"><div class="flabel">Visitable</div>
+          <label class="chk"><input type="checkbox" id="visit"/><span>S&iacute;</span></label></div>
+      </div>
       <div><div class="flabel">Extras</div>
         <div class="chips wrap" id="extras">
           <button class="chip" data-ex="estac">&#128663; Estac.</button>
@@ -633,18 +631,14 @@ $("#q").oninput=e=>{st.q=e.target.value;apply();};
 $("#comuna").onchange=e=>{st.comuna=e.target.value;apply();
   if(st.comuna&&!DESK.matches)setFiltersOpen(true);};
 $("#orden").onchange=e=>{st.orden=e.target.value;apply();};
-document.querySelectorAll("#dorm .chip").forEach(b=>b.onclick=()=>{const d=b.dataset.d;
-  st.dorm.has(d)?st.dorm.delete(d):st.dorm.add(d);b.classList.toggle("on");apply();});
-document.querySelectorAll("#dias .chip").forEach(b=>b.onclick=()=>{const x=b.dataset.x;
-  document.querySelectorAll("#dias .chip").forEach(o=>{if(o!==b)o.classList.remove("on");});
-  if(st.dias===x){st.dias="";b.classList.remove("on");}else{st.dias=x;b.classList.add("on");}apply();});
-document.querySelectorAll("#visit .chip").forEach(b=>b.onclick=()=>{const v=b.dataset.v;
-  document.querySelectorAll("#visit .chip").forEach(o=>{if(o!==b)o.classList.remove("on");});
-  if(st.visitable===v){st.visitable="";b.classList.remove("on");}else{st.visitable=v;b.classList.add("on");}apply();});
+$("#dorm").onchange=e=>{st.dorm.clear();if(e.target.value)st.dorm.add(e.target.value);apply();};
+$("#dias").onchange=e=>{st.dias=e.target.value;apply();};
+$("#visit").onchange=e=>{st.visitable=e.target.checked?"si":"";apply();};
 document.querySelectorAll("#extras .chip").forEach(b=>b.onclick=()=>{const ex=b.dataset.ex;
   st.extras.has(ex)?st.extras.delete(ex):st.extras.add(ex);b.classList.toggle("on");apply();});
 $("#reset").onclick=()=>{st.q=st.comuna=st.dias=st.visitable="";st.dorm.clear();st.extras.clear();st.orden="ranking";
   $("#q").value="";$("#comuna").value="";$("#orden").value="ranking";
+  $("#dorm").value="";$("#dias").value="";$("#visit").checked=false;
   document.querySelectorAll(".chip.on").forEach(c=>c.classList.remove("on"));apply();
   if(!DESK.matches)setFiltersOpen(false);};
 function activeCount(){let n=0;if(st.q)n++;if(st.comuna)n++;if(st.dorm.size)n++;if(st.dias)n++;if(st.visitable)n++;if(st.extras.size)n++;return n;}
