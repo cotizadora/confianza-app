@@ -184,6 +184,39 @@
   .abtn.up{background:var(--accent);color:var(--accent-ink)}
   .anote{font-size:12px;color:var(--muted);line-height:1.5}.anote b{color:var(--title)}
   .astep{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:4px 0 8px}
+  /* ===== Menú de la tuerca (premium) ===== */
+  .sheet.menu{position:relative;padding:0 16px 0;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 9%,var(--bg2)) 0,var(--bg2) 220px)}
+  .mclose{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:10px;border:1px solid var(--border);
+    background:var(--surface);font-size:14px;display:flex;align-items:center;justify-content:center;z-index:2}
+  .mhero{text-align:center;padding:30px 10px 20px}
+  .mlogo{height:54px;max-width:80%;object-fit:contain}
+  .msub{font-size:12px;color:var(--muted);margin-top:8px}
+  .mpill{display:inline-block;margin-top:12px;font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--accent);
+    border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);background:color-mix(in srgb,var(--accent) 10%,transparent);padding:4px 12px;border-radius:999px}
+  .mcard{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 15px;margin-bottom:12px}
+  .mtitle{font-size:14px;font-weight:800;color:var(--title);margin-bottom:10px;letter-spacing:-.01em}
+  .mnote{font-size:12.5px;color:var(--muted);line-height:1.5;margin:-4px 0 6px}
+  .flow{list-style:none;margin:0;padding:0;position:relative}
+  .flow li{display:flex;gap:12px;position:relative;padding-bottom:14px}
+  .flow li:last-child{padding-bottom:0}
+  .flow li:not(:last-child)::after{content:"";position:absolute;left:17px;top:38px;bottom:2px;width:2px;
+    background:linear-gradient(var(--accent),color-mix(in srgb,var(--accent) 15%,transparent));border-radius:2px}
+  .fi{flex:0 0 36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:17px;
+    background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);color:var(--accent)}
+  .flow b{color:var(--title);font-size:13.5px}
+  .flow p{margin:3px 0 0;font-size:12.5px;line-height:1.5;color:var(--muted)}
+  .flow p b{font-size:inherit}
+  .faq{border-top:1px solid var(--border-soft);padding:10px 0}
+  .faq:first-of-type{border-top:none;padding-top:2px}
+  .faq summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--txt);list-style:none;display:flex;justify-content:space-between;gap:10px}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::after{content:"+";color:var(--accent);font-weight:800}
+  .faq[open] summary::after{content:"\2212"}
+  .faq p{margin:7px 0 0;font-size:12.5px;line-height:1.5;color:var(--muted)}
+  .mcredit{text-align:center;font-size:11.5px;color:var(--muted);line-height:1.6;padding:6px 0 4px}
+  .mcredit b{color:var(--txt)}
+  .msave{position:sticky;bottom:0;padding:12px 0 18px;background:linear-gradient(transparent,var(--bg2) 30%)}
+  .msave .save{margin-top:0}
   .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--title);color:var(--page);
     padding:11px 20px;border-radius:999px;font-weight:700;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:80;box-shadow:0 10px 30px rgba(0,0,0,.4)}
   .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -286,34 +319,81 @@
   </div>
 
   <div class="scrim" id="sScrim">
-    <div class="sheet">
-      <div class="shead"><h3>Personalizar</h3><button class="close" id="sClose">&#10005;</button></div>
-      <div class="set-group" id="installGroup" style="display:none">
-        <div class="flabel">Aplicación</div>
-        <button class="abtn up" id="installBtn" style="width:100%">&#128241; Instalar en el celular</button>
-        <p class="anote" id="installHint" style="display:none;margin-top:8px"></p>
+    <div class="sheet menu">
+      <button class="close mclose" id="sClose" aria-label="Cerrar">&#10005;</button>
+      <!-- Cabecera de marca -->
+      <div class="mhero">
+        <img class="mlogo" id="mLogo" alt="Confianza Inmobiliaria"/>
+        <div class="msub">Inventario de arriendos &middot; generador de posts</div>
+        <span class="mpill">Herramienta interna para ejecutivos</span>
       </div>
-      <div class="set-group"><div class="flabel">Tema</div>
-        <div class="seg" id="segTheme"><button data-t="dark">Oscuro</button><button data-t="light">Claro</button></div></div>
-      <div class="set-group"><div class="flabel">Color de acento</div>
-        <div class="swatch" id="swAccent">
-          <div class="sw" data-a="dorado" style="background:#f59e0b"></div>
-          <div class="sw" data-a="verde"  style="background:#10b981"></div>
-          <div class="sw" data-a="azul"   style="background:#3b82f6"></div>
-        </div></div>
-      <div class="set-group"><div class="flabel">Tu firma</div>
+
+      <!-- Flujo de uso -->
+      <div class="mcard">
+        <div class="mtitle">&#10024; C&oacute;mo funciona</div>
+        <ol class="flow">
+          <li><span class="fi">&#128205;</span><div><b>Elige la comuna</b><p>Es el primer paso, arriba en la pantalla principal. Al elegirla se abren los dem&aacute;s filtros.</p></div></li>
+          <li><span class="fi">&#128269;</span><div><b>Afina la b&uacute;squeda</b><p>Dormitorios, disponibilidad, visitable y extras (estacionamiento, mascotas, sin aval&hellip;). Tambi&eacute;n puedes buscar por direcci&oacute;n u OP.</p></div></li>
+          <li><span class="fi">&#127968;</span><div><b>Revisa la tarjeta</b><p>Precio, gastos comunes y etiquetas como descuento o &#128273; llave. Toca el <b>OP</b> para copiarlo.</p></div></li>
+          <li><span class="fi">&#128242;</span><div><b>Comparte con un toque</b><p><b>Facebook</b> o <b>WhatsApp</b> copian el post listo con tu firma. <b>Requisitos</b> copia la renta l&iacute;quida que se pide.</p></div></li>
+          <li><span class="fi">&#8635;</span><div><b>Reinicia y repite</b><p>El bot&oacute;n &#8635; junto a Filtros deja todo como reci&eacute;n abierto para una nueva b&uacute;squeda.</p></div></li>
+        </ol>
+      </div>
+
+      <!-- Firma -->
+      <div class="mcard">
+        <div class="mtitle">&#9997;&#65039; Tu firma en los posts</div>
+        <p class="mnote">Se agrega al final de cada post que compartes. Se guarda solo en este equipo.</p>
         <div class="field-lbl">Nombre</div><input id="fNombre" placeholder="Ej: Eduardo Perez"/>
         <div class="field-lbl">Cargo / titulo (opcional)</div><input id="fCargo" placeholder="Ej: Ejecutivo de arriendos"/>
         <div class="field-lbl">WhatsApp para los posts</div><input id="fTel" inputmode="numeric" placeholder="56927690949"/>
         <div class="field-lbl">Frase / sello personal (opcional)</div><input id="fSello" placeholder="Ej: Tu asesor de confianza en arriendos"/>
       </div>
-      <div class="set-group">
-        <div class="flabel">Soporte</div>
-        <a class="abtn" target="_blank" rel="noopener" style="background:#25D366;color:#fff;width:100%"
-           href="https://wa.me/56927690949?text=Hola%2C%20te%20escribo%20desde%20la%20app%20*Confianza%20Inmobiliaria*%20para%20reportar%20un%20error%20o%20dar%20una%20sugerencia%3A%20"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.4 1.3 4.9L2 22l5.3-1.4C8.7 21.5 10.3 22 12 22c5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18c-1.6 0-3-.4-4.2-1.1l-.3-.2-3.1.8.8-3-.2-.3C4.4 15 4 13.5 4 12c0-4.4 3.6-8 8-8s8 3.6 8 8-3.6 8-8 8zm4.4-5.5c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1-1.3-.6-2.1-1.1-3-2.6-.2-.4.2-.4.6-1.2.1-.1 0-.3 0-.4l-.7-1.8c-.2-.4-.4-.4-.5-.4h-.5c-.2 0-.4.1-.6.3-.7.7-.9 1.7-.2 2.9 1.4 2.3 2.4 3.1 4.8 4 .8.3 1.4.5 1.9.3.6-.2 1.4-.8 1.6-1.3.2-.5.2-.9.1-1z"/></svg> Comunícate con el desarrollador</a>
-        <p class="anote" style="margin-top:8px">App de <b>Confianza Inmobiliaria</b> &middot; creada por Eduardo Pérez</p>
+
+      <!-- Apariencia -->
+      <div class="mcard">
+        <div class="mtitle">&#127912; Apariencia</div>
+        <div class="field-lbl" style="margin-top:0">Tema</div>
+        <div class="seg" id="segTheme"><button data-t="dark">Oscuro</button><button data-t="light">Claro</button></div>
+        <div class="field-lbl">Color de acento</div>
+        <div class="swatch" id="swAccent">
+          <div class="sw" data-a="dorado" style="background:#f59e0b"></div>
+          <div class="sw" data-a="verde"  style="background:#10b981"></div>
+          <div class="sw" data-a="azul"   style="background:#3b82f6"></div>
+        </div>
       </div>
-      <button class="save" id="sSave">Guardar</button>
+
+      <!-- Instalar -->
+      <div class="mcard" id="installGroup" style="display:none">
+        <div class="mtitle">&#128242; Instalar como app</div>
+        <p class="mnote">Queda un &iacute;cono en tu pantalla de inicio y se abre sin pasar por el navegador.</p>
+        <button class="abtn up" id="installBtn" style="width:100%;margin-bottom:0">&#128241; Instalar en el celular</button>
+        <p class="anote" id="installHint" style="display:none;margin-top:8px"></p>
+      </div>
+
+      <!-- Preguntas frecuentes -->
+      <div class="mcard">
+        <div class="mtitle">&#10067; Preguntas frecuentes</div>
+        <details class="faq"><summary>&iquest;Por qu&eacute; no veo propiedades al abrir?</summary>
+          <p>La app parte vac&iacute;a a prop&oacute;sito: elige una comuna o un filtro y aparecen.</p></details>
+        <details class="faq"><summary>&iquest;Qu&eacute; tan actualizado est&aacute; el inventario?</summary>
+          <p>La franja verde de arriba muestra la fecha y hora de la &uacute;ltima actualizaci&oacute;n. Todos los ejecutivos ven el mismo inventario.</p></details>
+        <details class="faq"><summary>&iquest;Qu&eacute; datos van en el post?</summary>
+          <p>Solo los datos comerciales de la propiedad y tu firma. Datos internos como el estado de la llave no se comparten.</p></details>
+        <details class="faq"><summary>La app instalada se ve antigua</summary>
+          <p>Ci&eacute;rrala por completo y vuelve a abrirla; se actualiza sola con conexi&oacute;n.</p></details>
+      </div>
+
+      <!-- Soporte y crédito -->
+      <div class="mcard">
+        <div class="mtitle">&#128172; Soporte</div>
+        <p class="mnote">&iquest;Un error o una idea para mejorar la app? Escr&iacute;bele directo al desarrollador.</p>
+        <a class="abtn" target="_blank" rel="noopener" style="background:#25D366;color:#fff;width:100%;margin-bottom:0"
+           href="https://wa.me/56927690949?text=Hola%2C%20te%20escribo%20desde%20la%20app%20*Confianza%20Inmobiliaria*%20para%20reportar%20un%20error%20o%20dar%20una%20sugerencia%3A%20"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.4 1.3 4.9L2 22l5.3-1.4C8.7 21.5 10.3 22 12 22c5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18c-1.6 0-3-.4-4.2-1.1l-.3-.2-3.1.8.8-3-.2-.3C4.4 15 4 13.5 4 12c0-4.4 3.6-8 8-8s8 3.6 8 8-3.6 8-8 8zm4.4-5.5c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1-1.3-.6-2.1-1.1-3-2.6-.2-.4.2-.4.6-1.2.1-.1 0-.3 0-.4l-.7-1.8c-.2-.4-.4-.4-.5-.4h-.5c-.2 0-.4.1-.6.3-.7.7-.9 1.7-.2 2.9 1.4 2.3 2.4 3.1 4.8 4 .8.3 1.4.5 1.9.3.6-.2 1.4-.8 1.6-1.3.2-.5.2-.9.1-1z"/></svg> Comunícate con el desarrollador</a>
+      </div>
+      <div class="mcredit">App de <b>Confianza Inmobiliaria</b><br>Dise&ntilde;ada y desarrollada por <b>Eduardo P&eacute;rez</b></div>
+
+      <div class="msave"><button class="save" id="sSave">Guardar</button></div>
     </div>
   </div>
 
@@ -673,6 +753,7 @@ function openSet(){ document.querySelectorAll("#segTheme button").forEach(b=>b.c
   $("#fNombre").value=cfg.nombre;$("#fCargo").value=cfg.cargo;$("#fTel").value=cfg.tel||"";$("#fSello").value=cfg.sello||"";
   updateInstallUI();$("#sScrim").classList.add("on");}
 $("#openSet").onclick=openSet;
+$("#mLogo").src=$(".brand-logo").src;
 $("#sClose").onclick=()=>$("#sScrim").classList.remove("on");
 $("#sScrim").onclick=e=>{if(e.target.id==="sScrim")$("#sScrim").classList.remove("on");};
 document.querySelectorAll("#segTheme button").forEach(b=>b.onclick=()=>{cfg.theme=b.dataset.t;
